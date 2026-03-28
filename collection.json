@@ -1,0 +1,37 @@
+{
+  "name": "projects",
+  "display_name": "Projects",
+  "version": "3.0.0",
+  "description": "Full project lifecycle management — create projects with structured briefs, track ideas from private exploration to actionable artifacts, manage action items with dependency chains, record decisions, monitor comms channels, and generate status reports for stakeholders.",
+  "author": "agent-index",
+  "license": "proprietary",
+  "category": "project-management",
+  "agent_index_min_version": "2.0.0",
+  "api": [
+    "create-project",
+    "edit-project",
+    "archive-project",
+    "unarchive-project",
+    "create-idea",
+    "share-idea",
+    "manage-ideas",
+    "update-project",
+    "manage-action-items",
+    "project-decide",
+    "channel-digest",
+    "project-pulse",
+    "projects-tutorial"
+  ],
+  "dependencies": [],
+  "external_dependencies": [
+    {
+      "system": "Slack / Microsoft Teams / Discord",
+      "access_required": "Channel creation, archival, member invitation, message history reading (only if comms channel integration and/or channel monitoring are enabled during collection setup)",
+      "contact": "org admin",
+      "required": false
+    }
+  ],
+  "eol_date": null,
+  "marketplace_url": "https://github.com/agent-index/projects-collection",
+  "support_url": "https://agent-index.ai/support"
+}

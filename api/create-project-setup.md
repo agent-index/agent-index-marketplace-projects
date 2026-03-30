@@ -41,6 +41,14 @@ This setup takes about one minute. It connects your create-project task to your 
 - Value source: injected from collection org-setup-responses
 - Member visibility: read-only
 
+### Member-Defined Parameters [member-defined]
+
+**slack_user_token_path** [member-defined] (only asked if comms_channel_enabled is `true` AND comms_platform is `slack`)
+- Description: Path to this member's Slack user token file. The token is used when creating project channels and inviting members — the channel is created as this member, not a shared bot.
+- Default: inherited from collection setup's `slack_user_token_path` (typically `{member_workspace}/.credentials/slack-user-token.txt`)
+- Ask: "Channel creation uses your personal Slack token. The org default path is `{slack_user_token_path}`. Does that work for you, or do you store it somewhere else?"
+- Validation: Check that the file exists and contains a string starting with `xoxp-`. If not found: "I can't find a Slack token at that path. You can set this up later — channel creation will just be marked as pending until it's configured. Would you like me to walk you through getting a Slack user token?"
+
 ---
 
 ## Setup Completion

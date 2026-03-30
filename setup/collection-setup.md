@@ -161,6 +161,13 @@ None of these features are hard requirements at the system level. Even when mark
   - `automatic`: The channel is archived automatically when the project is archived (with a confirmation note to the member).
   - `none`: Channel is left as-is when the project is archived.
 
+**slack_user_token_path** (only asked if comms_channel_enabled is `true` AND comms_platform is `slack`)
+- Description: Default path where each member's Slack user token file is expected. The token is a per-member credential (starts with `xoxp-`) — the script acts on behalf of the individual member, not a shared bot. Each member stores their own token. Required scopes: `channels:write`, `channels:manage`, `users:read.email`, and `groups:write` (for private channels).
+- Interview prompt: "Channel creation uses each member's own Slack user token so channels are created as that person. Where should members store their token file? This is a default path — members can override it during their own setup. The file should contain just the token string (starts with `xoxp-`)."
+- Accepted values: Any valid local filesystem path pattern (can include `{member_workspace}` placeholder)
+- Default: `{member_workspace}/.credentials/slack-user-token.txt`
+- Note: The token file should contain only the token string, no other content. Members configure this path during their member-bootstrap or task setup. The `create_channel.py` script in `apps/slack-channel-creator/` reads from this path at runtime. If a member hasn't set up their token yet, channel creation gracefully falls back to `pending` status.
+
 ---
 
 ## Project Tracking

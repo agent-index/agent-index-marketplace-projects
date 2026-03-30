@@ -76,6 +76,7 @@ Read `collection-setup-responses.md` from the collection's setup directory on th
 - `comms_platform` — which platform (slack, teams, discord, other)
 - `comms_channel_naming_template` — channel naming template
 - `comms_channel_enforcement` — whether channel creation is required or optional
+- `slack_user_token_path` — path to the Slack bot token file (if comms_platform is `slack`)
 - `activity_log_enabled` — whether project activity logging is enabled
 - `ideas_enabled` — whether project ideas are enabled
 - `action_items_enabled` — whether action items are enabled
@@ -371,7 +372,27 @@ On confirmation:
    Update `last_updated` on the manifest. Write the file to the remote filesystem via `aifs_write`.
 
 5. If comms channel is enabled for this project: attempt to create the channel on the configured platform.
-   - Use the appropriate MCP connector for the platform (Slack, Teams, Discord)
+
+   **For Slack (`comms_platform` is `slack`):**
+   Use the bundled `create_channel.py` script in `apps/slack-channel-creator/`. Read `slack_user_token_path` from `collection-setup-responses.md`. Run:
+
+   ```bash
+   python {apps_path}/slack-channel-creator/create_channel.py \
+       --name "{channel_name}" \
+       --token-file "{slack_user_token_path}" \
+       --topic "Project channel for {project name}" \
+       --purpose "Coordination channel for the {project name} project" \
+       --invite "{comma-separated emails of registered members}"
+   ```
+
+   The script outputs JSON. Parse the result:
+   - If `ok: true`: set `comms_channel.status: active`. Report: "Channel `#{channel_name}` has been created on Slack." If `invites.failed` is non-empty, note which members couldn't be invited and why (e.g., "user_not_found" means they aren't in the Slack workspace).
+   - If `ok: false` with `error: name_taken`: the channel already exists. Note: "A channel called `#{channel_name}` already exists in Slack. I've recorded it in the project — you may want to verify it's the right channel." Set `comms_channel.status: active`.
+   - If `ok: false` with any other error: set `comms_channel.status: pending`. Note: "Channel creation failed ({error}). The channel is noted as pending — you can create it later via '@ai:edit-project' or manually in Slack."
+   - If the script is not found or `slack_user_token_path` is not configured: set `comms_channel.status: pending`. Note: "Channel creation isn't configured yet — the Slack bot token path may be missing from collection setup. The channel `#{channel_name}` is noted as pending."
+
+   **For other platforms (Teams, Discord, other):**
+   - Use the appropriate MCP connector for the platform if available
    - Create the channel with the confirmed name
    - Set the channel topic/description to: "Project channel for {project name}"
    - Invite all registered project members (owner, PM, and team members with non-null `member_hash`) to the channel. Unregistered members cannot be invited — note them: "{name} couldn't be invited to the channel because they're not in the org registry yet."

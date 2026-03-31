@@ -18,7 +18,7 @@ This setup takes about one minute. It connects your edit-project task to your or
 ## Pre-Setup Checks
 
 - `collection-setup-responses.md` is readable → if not: "The Projects collection hasn't been fully configured by your org admin yet. Contact them to complete collection setup before you can install this task."
-- `shared_projects_path` from collection setup exists and is readable → if not: "The shared projects directory doesn't appear to be accessible. Try '@ai:member-bootstrap' to check your remote filesystem connection."
+- `shared_projects_path` from collection setup exists and is readable → if not: check `aifs_auth_status()` and attempt automatic re-authentication if `authenticated: false`. If re-auth succeeds, retry. If not: "The shared projects directory doesn't appear to be accessible. I tried to restore your connection but wasn't able to. Try '@ai:member-bootstrap' to troubleshoot."
 
 ---
 

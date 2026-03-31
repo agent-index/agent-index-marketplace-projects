@@ -6,6 +6,13 @@ Format: [MAJOR.MINOR.PATCH] — YYYY-MM-DD
 
 ---
 
+## [3.0.1] — 2026-03-31
+
+### Changed
+- All tasks and setup files now attempt automatic re-authentication on auth failures instead of prompting users to say `@ai:member-bootstrap`
+
+---
+
 ## [3.0.0] — 2026-03-25
 
 ### Changed

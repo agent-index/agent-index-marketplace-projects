@@ -83,7 +83,7 @@ Read `collection-setup-responses.md` from the collection's setup directory on th
 
 Verify that `shared_projects_path` exists and is writable on the remote filesystem (via `aifs_exists` and a test `aifs_write`). If not:
 
-**On failure:** Surface: "The shared projects directory at `{path}` isn't accessible. This may be a filesystem connectivity issue — try '@ai:member-bootstrap' to check your remote filesystem connection, or contact your org admin if the directory hasn't been created yet." Halt.
+**On failure:** Check `aifs_auth_status()`. If `authenticated: false`, attempt automatic re-authentication via `aifs_authenticate` and retry. If re-auth fails or the directory is still inaccessible: surface "The shared projects directory at `{path}` isn't accessible. I tried to restore your remote connection but wasn't able to. Try '@ai:member-bootstrap' to troubleshoot, or contact your org admin if the directory hasn't been created yet." Halt.
 
 **On success:** Proceed to Step 2.
 
@@ -413,7 +413,7 @@ On confirmation:
 7. Confirm to member:
    > "Project '{name}' has been created. You can find it at `{shared_projects_path}/{slug}/`. To edit it later, say '@ai:edit-project' or 'edit project {name}'."
 
-**On any write failure:** Surface the specific file that failed to write via `aifs_write`, leave any successfully written files in place, and advise the member to retry or check remote filesystem connectivity via '@ai:member-bootstrap'.
+**On any write failure:** Check `aifs_auth_status()`. If `authenticated: false`, attempt automatic re-authentication via `aifs_authenticate` and retry the failed write. If re-auth fails or the write still fails: surface the specific file that failed, leave any successfully written files in place, and advise the member to retry or say '@ai:member-bootstrap' to troubleshoot their remote filesystem connection.
 
 ---
 

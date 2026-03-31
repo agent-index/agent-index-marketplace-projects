@@ -1,7 +1,7 @@
 {
   "name": "projects",
   "display_name": "Projects",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Full project lifecycle management — create projects with structured briefs, track ideas from private exploration to actionable artifacts, manage action items with dependency chains, record decisions, monitor comms channels, and generate status reports for stakeholders.",
   "author": "agent-index",
   "license": "proprietary",

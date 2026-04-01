@@ -50,15 +50,17 @@ The cadence is a suggestion surfaced at session-start, not an automated schedule
 
 ### Step 1: Read Configuration and Identify Project
 
-Read `collection-setup-responses.md` to get `channel_monitor_enabled`, `comms_platform`, `activity_log_enabled`, `action_items_enabled`.
+Read `collection-setup-responses.md` via `aifs_read` to get `channel_monitor_enabled`, `comms_platform`, `activity_log_enabled`, `action_items_enabled`.
+
+**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` MCP tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
 
 If `channel_monitor_enabled` is `false`: halt with appropriate message.
 
-Identify the project. Verify it has an active comms channel (`comms_channel.enabled: true` and `comms_channel.status: active` in project.md).
+Identify the project. Verify it has an active comms channel (`comms_channel.enabled: true` and `comms_channel.status: active` in project.md — read via `aifs_read`).
 
 If no active channel: surface "This project doesn't have an active {comms_platform} channel. Set one up via '@ai:edit-project'." Halt.
 
-Read `{project}/state/channel-cursor.json` to get the last-checked timestamp. If the file doesn't exist, this is the first digest — note that to the member.
+Read `{project}/state/channel-cursor.json` via `aifs_read` to get the last-checked timestamp. If the file doesn't exist, this is the first digest — note that to the member.
 
 **On success:** Proceed to Step 2.
 
@@ -186,6 +188,8 @@ For candidate extraction, err on the side of capturing too many rather than too 
 When summarizing messages for the digest and candidates, paraphrase rather than quote verbatim. The channel is a conversation; the digest is a record. They should read differently.
 
 ### Constraints
+
+This task is the sole entry point for reading a project's communications channel. No other task, skill, or ad-hoc request should read channel messages directly. If a member asks to "read the channel," "check Slack for updates," "sync from the channel," or any variation — route through this task. This ensures the channel cursor is always used, messages are never re-processed, and all extracted content flows through the review queue.
 
 Never auto-promote channel content to action items, updates, or decisions. Everything goes through the review queue.
 

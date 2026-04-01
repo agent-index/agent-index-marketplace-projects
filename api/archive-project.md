@@ -41,11 +41,13 @@ The member identifies which project to archive and optionally provides an archiv
 
 ### Step 1: Read Org Configuration and Identify Project
 
-Read `collection-setup-responses.md` to get `shared_projects_path`.
+Read `collection-setup-responses.md` via `aifs_read` to get `shared_projects_path`.
+
+**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` MCP tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
 
 If the member named a project in their invocation: use that name. If not: ask "Which project would you like to archive?"
 
-Read `projects-manifest.json` and find the matching project. If the project is already `archived`:
+Read `projects-manifest.json` via `aifs_read` and find the matching project. If the project is already `archived`:
 
 **On already archived:** Surface: "'{name}' is already archived. If you want to bring it back, say '@ai:unarchive-project' or 'unarchive {name}'." Halt.
 
@@ -53,7 +55,7 @@ If the project cannot be found:
 
 **On not found:** Surface: "I couldn't find a project matching '{input}'. Say '@ai:list-projects' to see all projects." Halt.
 
-Read the full `project.md` for the identified project.
+Read the full `project.md` for the identified project via `aifs_read`.
 
 **On success:** Proceed to Step 2.
 
@@ -71,7 +73,7 @@ Accept any string or skip. This becomes the `archive_note` field in `project.md`
 
 ### Step 3: Comms Channel Handling
 
-Read `collection-setup-responses.md` to get `comms_channel_enabled` and `comms_channel_archive_on_project_archive`.
+Read `collection-setup-responses.md` via `aifs_read` to get `comms_channel_enabled` and `comms_channel_archive_on_project_archive`.
 
 Check the project's `comms_channel` field in `project.md`. If the project has an active channel (`comms_channel.enabled: true` and `comms_channel.status: active`):
 

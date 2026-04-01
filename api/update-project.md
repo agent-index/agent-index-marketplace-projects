@@ -41,13 +41,17 @@ On demand, whenever a member has something to report. Designed for frequent, lig
 
 ### Step 1: Read Configuration and Identify Project
 
-Read `collection-setup-responses.md` to get `shared_projects_path`, `activity_log_enabled`, `action_items_enabled`.
+Read `collection-setup-responses.md` via `aifs_read` to get `shared_projects_path`, `activity_log_enabled`, `action_items_enabled`.
 
-If the member named a project: find it in `projects-manifest.json`. If not: ask "Which project are you updating?"
+**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` MCP tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
 
-Read the project's `current-state.md` to understand the current context.
+If the member named a project: find it in `projects-manifest.json` via `aifs_read`. If not: ask "Which project are you updating?"
 
-If `action_items_enabled`: read `action-items.json` and identify items assigned to the current member.
+Read the project's `current-state.md` via `aifs_read` to understand the current context.
+
+If `action_items_enabled`: read `action-items.json` via `aifs_read` and identify items assigned to the current member.
+
+**Channel source check:** If the member's request indicates the update source is a communications channel (e.g., "read the Slack channel and update the project," "check the channel for updates," "sync from Slack"), do not read the channel directly. Instead, hand off to `channel-digest`. That task manages the channel cursor, extracts candidates properly, and writes to the review queue. After channel-digest completes, return here to apply any confirmed updates to the project files. Never read a project's comms channel outside of the channel-digest workflow — even for ad-hoc requests.
 
 **On success:** Proceed to Step 2.
 

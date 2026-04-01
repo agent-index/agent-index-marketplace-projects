@@ -39,11 +39,13 @@ The member identifies which archived project to restore.
 
 ### Step 1: Read Org Configuration and Identify Project
 
-Read `collection-setup-responses.md` to get `shared_projects_path`.
+Read `collection-setup-responses.md` via `aifs_read` to get `shared_projects_path`.
+
+**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` MCP tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
 
 If the member named a project in their invocation: use that name. If not: ask "Which archived project would you like to restore?"
 
-Read `projects-manifest.json` and find the matching project. If the project is already `active`:
+Read `projects-manifest.json` via `aifs_read` and find the matching project. If the project is already `active`:
 
 **On already active:** Surface: "'{name}' is already active — there's nothing to unarchive. To edit it, say '@ai:edit-project' or 'edit project {name}'." Halt.
 
@@ -51,7 +53,7 @@ If the project cannot be found in the manifest at all:
 
 **On not found:** Surface: "I couldn't find a project matching '{input}'. To see archived projects, say '@ai:list-projects' or 'list archived projects'." Halt.
 
-Read the full `project.md` for the identified project.
+Read the full `project.md` for the identified project via `aifs_read`.
 
 **On success:** Proceed to Step 2.
 

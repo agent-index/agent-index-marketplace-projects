@@ -44,11 +44,13 @@ On demand. Also surfaced at session-start if the member has open or newly unbloc
 
 ### Step 1: Read Configuration and Identify Project
 
-Read `collection-setup-responses.md` to get feature flags.
+Read `collection-setup-responses.md` via `aifs_read` to get feature flags.
+
+**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` MCP tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
 
 If `action_items_enabled` is `false`: halt with appropriate message.
 
-Identify the project. Read `{project}/action-items.json`.
+Identify the project (read `projects-manifest.json` via `aifs_read`). Read `{project}/action-items.json` via `aifs_read`.
 
 **On success:** Proceed to Step 2.
 

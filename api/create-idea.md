@@ -49,11 +49,13 @@ On demand, whenever a member wants to start exploring a concept for a project.
 
 ### Step 1: Read Org Configuration and Identify Project
 
-Read `collection-setup-responses.md` to get `shared_projects_path`, `ideas_enabled`, and `ideas_require_private_stage`.
+Read `collection-setup-responses.md` via `aifs_read` to get `shared_projects_path`, `ideas_enabled`, and `ideas_require_private_stage`.
+
+**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` MCP tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
 
 If `ideas_enabled` is `false`: surface "Ideas aren't enabled for your org's project setup. Contact your org admin if you'd like this feature." Halt.
 
-If the member named a project in their invocation: use that name. Read `projects-manifest.json` and find the matching active project.
+If the member named a project in their invocation: use that name. Read `projects-manifest.json` via `aifs_read` and find the matching active project.
 
 If the member did not name a project: ask "Which project is this idea for?"
 

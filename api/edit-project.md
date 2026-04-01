@@ -45,13 +45,15 @@ On demand, whenever a project record needs to change.
 
 ### Step 1: Read Org Configuration and Identify Project
 
-Read `collection-setup-responses.md` to get `shared_projects_path`, `roles_config`, and all feature flags (`brief_enabled`, `brief_sections`, `milestones_enabled`, `comms_channel_enabled`, `comms_platform`, `comms_channel_naming_template`).
+Read `collection-setup-responses.md` via `aifs_read` to get `shared_projects_path`, `roles_config`, and all feature flags (`brief_enabled`, `brief_sections`, `milestones_enabled`, `comms_channel_enabled`, `comms_platform`, `comms_channel_naming_template`).
 
-If the member named a project in their invocation: use that name. Generate the slug and check whether `{shared_projects_path}/{slug}/project.md` exists.
+**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` MCP tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
+
+If the member named a project in their invocation: use that name. Generate the slug and check whether `{shared_projects_path}/{slug}/project.md` exists (via `aifs_exists`).
 
 If the member did not name a project: ask "Which project would you like to edit?"
 
-Read `projects-manifest.json`. If the member's input doesn't exactly match a known slug, find the closest match by name. If multiple close matches exist, present them and ask the member to confirm which one.
+Read `projects-manifest.json` via `aifs_read`. If the member's input doesn't exactly match a known slug, find the closest match by name. If multiple close matches exist, present them and ask the member to confirm which one.
 
 If the identified project has `status: archived`:
 
@@ -61,7 +63,7 @@ If the project cannot be found:
 
 **On not found:** Surface: "I couldn't find a project matching '{input}'. Say '@ai:list-projects' to see all projects, or check the name and try again." Halt.
 
-**On success:** Read the full `project.md` for the identified project. Proceed to Step 2.
+**On success:** Read the full `project.md` for the identified project via `aifs_read`. Proceed to Step 2.
 
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: projects-tutorial
 type: skill
-version: 3.0.0
+version: 3.0.3
 collection: projects
 description: Explains the projects collection to members — its concepts, workflows, and how to be productive with it — through a guided tour or targeted answers to specific questions. Covers project creation, ideas, action items, decisions, channel digests, and project pulse.
 stateful: false
@@ -76,7 +76,7 @@ When an idea is ready for others to see, use `@ai:share-idea` to promote it to t
 
 Collaborators can attach their own artifacts to the idea — mockups, documents, estimates — and create response ideas that reference yours. This turns ideas into a structured conversation, not just a one-way broadcast.
 
-When an idea produces something actionable — a mockup that's been approved, a design that should be built — you promote that artifact from the idea to the project's main artifacts space. Promotion creates action items automatically: "Sarah, implement this approved design by April 15."
+When an idea produces something actionable — a mockup that's been approved, a design that should be built — use `@ai:manage-ideas` to view and work with your ideas. From there, you can explicitly promote an artifact from the idea to the project's main artifacts space. Promotion creates action items automatically: "Sarah, implement this approved design by April 15." This handoff from exploration to execution requires your explicit action.
 
 The key principle: ideas are for exploration, action items are for execution. The promotion step is the gate between them.
 
@@ -112,6 +112,8 @@ Second, it extracts candidates — messages that look like they might be action 
 
 These candidates go into a review queue. Nothing is automatically promoted — you review each candidate and decide whether to accept it (as an action item, update, or decision), edit it, or dismiss it. This keeps the project record clean and accurate while making sure important signals from chat don't get lost.
 
+There's an important distinction here: if you use `@ai:update-project` and your update comes from a comms channel, the system automatically hands off to `@ai:channel-digest` instead of reading the channel directly. That ensures the channel cursor tracks what's been processed and nothing gets duplicated or lost. The channel digest is the sole entry point for reading project channels.
+
 **Topic 7: Project pulse — status and Q&A**
 
 Project pulse (`@ai:project-pulse`) is how stakeholders and managers get information about a project without digging through the details.
@@ -122,7 +124,13 @@ Conversational mode is more flexible — you ask questions about the project and
 
 The quality of pulse output depends on how well the tracking data has been maintained. If the team is regularly sharing updates and recording decisions, pulse reports are rich and useful. If tracking is sparse, pulse will say so honestly.
 
-**Topic 8: How everything connects**
+**Topic 8: Project lifecycle — archiving and restoring**
+
+When a project wraps up and is no longer relevant to active org work, use `@ai:archive-project` to retire it. Archiving marks the project as `archived`, removes it from active project views, and makes it read-only. Nothing gets deleted — the project record and all its data remain intact in case you need to reference it later.
+
+If you need to revive an archived project and work on it again, use `@ai:unarchive-project` to restore it to active status. The project's full history, scope, member list, and all files come back exactly as they were. This lifecycle separation — archive as a meaningful event rather than just a field change — helps keep your project list focused on what's currently active.
+
+**Topic 9: How everything connects**
 
 The real power of the system is how the pieces work together:
 
@@ -132,7 +140,7 @@ No single piece is required. Some teams will use everything. Others might just u
 
 The daily workflow is simple: share updates with `@ai:update-project` (just talk naturally about what you did, what's blocked, what's next), and the system parses your update into the right structure. Over time, this builds a rich project record that pulse can synthesize.
 
-After Topic 8, offer to go deeper on any topic or to answer specific questions. Also surface the invocation shortcuts: "To see your project commands, check your member index. The main ones are `@ai:create-project`, `@ai:update-project`, `@ai:manage-action-items`, and `@ai:project-pulse`."
+After Topic 9, offer to go deeper on any topic or to answer specific questions. Also surface the invocation shortcuts: "To see your project commands, check your member index. The main ones are `@ai:create-project`, `@ai:update-project`, `@ai:manage-action-items`, `@ai:manage-ideas`, and `@ai:project-pulse`."
 
 ### Answering Specific Questions
 

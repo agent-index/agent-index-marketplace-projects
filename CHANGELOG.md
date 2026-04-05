@@ -6,6 +6,13 @@ Format: [MAJOR.MINOR.PATCH] — YYYY-MM-DD
 
 ---
 
+## [3.0.4] — 2026-04-05
+
+### Added
+- Slack app prerequisite guidance in collection setup — when the org admin selects Slack as their comms platform, the setup interview now explains that a Slack app with the required OAuth scopes must exist before members can generate their user tokens
+
+---
+
 ## [3.0.3] — 2026-04-01
 
 ### Fixed

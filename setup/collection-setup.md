@@ -1,7 +1,7 @@
 ---
 name: projects-collection-setup
 type: collection-setup
-version: 3.0.0
+version: 3.0.4
 collection: projects
 description: Org-admin setup interview for the Projects collection
 upgrade_compatible: true
@@ -137,6 +137,16 @@ None of these features are hard requirements at the system level. Even when mark
 - Accepted values: `slack` | `teams` | `discord` | `other`
 - Default: none — must be specified
 - Note: If `other` is selected, the admin provides the platform name. Channel creation will still be offered but the task will note that automatic channel creation may require a compatible MCP connector.
+
+**Slack app prerequisite** (admin guidance — presented immediately after the admin selects `slack` as their platform, before continuing with the remaining comms parameters)
+- Interview prompt: "Before we continue — channel creation requires a Slack app in your workspace that grants user-level tokens to members. If you don't already have one set up, here's what's needed:
+  1. A workspace admin creates a Slack app at https://api.slack.com/apps (or uses an existing one).
+  2. Under **OAuth & Permissions**, add these user token scopes: `channels:write`, `channels:manage`, `users:read.email`, and `groups:write` (the last one only needed if you plan to allow private project channels).
+  3. Install the app to your workspace.
+  4. Each member then authorizes the app individually — this generates a personal user token (starts with `xoxp-`) that they save to a local file. The member setup interview will walk them through that step.
+
+  If your workspace already has a Slack app with these scopes, you're all set — just make sure members know how to authorize and save their tokens. Want to continue with the rest of the channel configuration?"
+- Note: This is informational guidance, not a collected parameter. No value is stored. The admin may need to coordinate with their Slack workspace admin if they are not the same person. Do not block setup if the admin says the app doesn't exist yet — they can create it before rolling out to members.
 
 **comms_channel_naming_template** (only asked if comms_channel_enabled is `true`)
 - Description: The naming convention for project channels.

@@ -3,7 +3,7 @@
   "type": "task",
   "display_name": "Create Project",
   "collection": "projects",
-  "collection_version": "1.0.0",
+  "collection_version": "3.0.4",
   "version": "1.0.0",
   "eol_date": null,
   "eol_warning_days": 60,
@@ -16,7 +16,8 @@
   "parameter_provenance": {
     "shared_projects_path": "org-mandated",
     "roles_config": "org-mandated",
-    "org_roles": "org-mandated"
+    "org_roles": "org-mandated",
+    "slack_user_token_path": "member-defined"
   },
   "dependencies": {
     "skills": [],

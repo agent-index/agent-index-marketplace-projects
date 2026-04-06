@@ -1,26 +1,21 @@
 {
-  "name": "archive-project",
+  "name": "manage-action-items",
   "type": "task",
-  "display_name": "Archive Project",
+  "display_name": "Manage Action Items",
   "collection": "projects",
   "collection_version": "3.0.4",
-  "version": "1.0.0",
+  "version": "3.0.0",
   "eol_date": null,
   "eol_warning_days": 60,
   "stateful": false,
   "produces_artifacts": false,
   "produces_shared_artifacts": false,
-  "setup_template": "archive-project-setup.md",
+  "setup_template": "manage-action-items-setup.md",
   "dependency_status": "complete",
   "missing_dependencies": [],
-  "parameter_provenance": {
-    "shared_projects_path": "org-mandated"
-  },
-  "dependencies": {
-    "skills": [],
-    "tasks": []
-  },
-  "external_dependencies": [],
+  "parameter_provenance": {},
+  "dependencies": { "skills": [], "tasks": [] },
+  "external_dependencies": ["Slack / Microsoft Teams / Discord (conditional)"],
   "reads_from": null,
   "writes_to": null
 }

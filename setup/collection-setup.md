@@ -326,6 +326,9 @@ Activity logging is automatically enabled if any tracking feature (ideas, action
 - Any new parameters introduced in a new version are surfaced to the admin during upgrade
 - New default project structure features added in future versions are presented as accept/skip choices during upgrade
 
+### Requires Member Attention
+None for PATCH/MINOR upgrades. MAJOR version upgrades will document required member actions here.
+
 ### Migration Notes
 - v1.0 → v2.0: Three new default project structure features added (project brief, milestones, comms channel). Existing orgs upgrading from v1.0 will be prompted to accept or skip each feature. Existing projects are not modified — new features only apply to projects created after the upgrade. The `scope narrative` field in existing projects remains valid and is treated as the `description` section of the project brief.
 - v2.0 → v3.0: Five project tracking features added (activity logging, ideas, action items, channel monitoring, project pulse). Existing orgs upgrading from v2.0 will be prompted to accept or skip each. Existing projects do not gain tracking directories automatically — the new directories are created when a tracking task is first used on an existing project, or via edit-project.

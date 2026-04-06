@@ -1,0 +1,21 @@
+{
+  "name": "channel-digest",
+  "type": "task",
+  "display_name": "Channel Digest",
+  "collection": "projects",
+  "collection_version": "3.0.4",
+  "version": "3.0.0",
+  "eol_date": null,
+  "eol_warning_days": 60,
+  "stateful": true,
+  "produces_artifacts": false,
+  "produces_shared_artifacts": false,
+  "setup_template": "channel-digest-setup.md",
+  "dependency_status": "complete",
+  "missing_dependencies": [],
+  "parameter_provenance": {},
+  "dependencies": { "skills": [], "tasks": [] },
+  "external_dependencies": ["Slack / Microsoft Teams / Discord"],
+  "reads_from": null,
+  "writes_to": null
+}

@@ -1,7 +1,7 @@
 ---
 name: update-project
 type: task
-version: 3.0.0
+version: 3.0.4
 collection: projects
 description: The primary input mechanism for project updates — share progress, report blockers, update action items, and log what's happening. Lightweight and conversational.
 stateful: false

@@ -1,7 +1,7 @@
 ---
 name: create-project
 type: task
-version: 3.0.0
+version: 3.0.4
 collection: projects
 description: Creates a new project in the org's shared project registry, including ownership, brief, milestones, team members, roles, optional comms channel, and project tracking directories.
 stateful: false

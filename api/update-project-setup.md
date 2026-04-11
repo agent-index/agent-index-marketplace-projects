@@ -1,7 +1,7 @@
 ---
 name: update-project-setup
 type: setup
-version: 3.0.0
+version: 3.0.4
 collection: projects
 description: Setup for the update-project task
 target: update-project

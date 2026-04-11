@@ -1,7 +1,7 @@
 ---
 name: projects-tutorial
 type: skill
-version: 3.0.3
+version: 3.0.4
 collection: projects
 description: Explains the projects collection to members — its concepts, workflows, and how to be productive with it — through a guided tour or targeted answers to specific questions. Covers project creation, ideas, action items, decisions, channel digests, and project pulse.
 stateful: false

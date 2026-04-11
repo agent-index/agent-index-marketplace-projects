@@ -1,7 +1,7 @@
 ---
 name: manage-ideas
 type: task
-version: 3.0.0
+version: 3.0.4
 collection: projects
 description: View, edit, and manage ideas — add artifacts, create response ideas, add collaborators, and promote artifacts to the project with actionable assignments.
 stateful: false

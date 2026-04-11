@@ -1,7 +1,7 @@
 ---
 name: channel-digest
 type: task
-version: 3.0.0
+version: 3.0.4
 collection: projects
 description: Checks a project's communications channel for new messages, produces a digest summary, and extracts candidate action items and updates for human review.
 stateful: true

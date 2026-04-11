@@ -1,7 +1,7 @@
 ---
 name: manage-action-items
 type: task
-version: 3.0.0
+version: 3.0.4
 collection: projects
 description: Create, view, assign, complete, reassign, and chain action items. Process the review queue from channel digests.
 stateful: false

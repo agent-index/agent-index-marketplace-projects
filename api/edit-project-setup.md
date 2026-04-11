@@ -1,7 +1,7 @@
 ---
 name: edit-project-setup
 type: setup
-version: 1.0.0
+version: 3.0.4
 collection: projects
 description: Setup interview for the edit-project task
 target: edit-project

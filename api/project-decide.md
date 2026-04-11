@@ -1,7 +1,7 @@
 ---
 name: project-decide
 type: task
-version: 3.0.0
+version: 3.0.4
 collection: projects
 description: Records an official project decision with rationale, source ideas, and spawned action items. Decisions are the authoritative record of why the team is doing something.
 stateful: false

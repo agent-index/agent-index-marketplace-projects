@@ -1,7 +1,7 @@
 ---
 name: edit-project
 type: task
-version: 2.0.0
+version: 3.0.4
 collection: projects
 description: Edits an existing active project — updating brief, milestones, ownership, member list, roles, comms channel, or any other project fields.
 stateful: false

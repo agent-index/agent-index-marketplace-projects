@@ -1,7 +1,7 @@
 ---
 name: create-idea
 type: task
-version: 3.0.0
+version: 3.0.4
 collection: projects
 description: Creates a new idea for a project — a private exploration space for developing concepts, designs, or proposals before sharing them with the team.
 stateful: false

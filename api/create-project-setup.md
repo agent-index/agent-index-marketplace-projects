@@ -1,7 +1,7 @@
 ---
 name: create-project-setup
 type: setup
-version: 1.0.0
+version: 3.0.4
 collection: projects
 description: Setup interview for the create-project task
 target: create-project

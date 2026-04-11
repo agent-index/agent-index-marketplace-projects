@@ -1,7 +1,7 @@
 ---
 name: share-idea-setup
 type: setup
-version: 3.0.0
+version: 3.0.4
 collection: projects
 description: Setup for the share-idea task
 target: share-idea

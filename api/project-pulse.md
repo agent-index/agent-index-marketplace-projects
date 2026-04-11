@@ -1,7 +1,7 @@
 ---
 name: project-pulse
 type: task
-version: 3.0.0
+version: 3.0.4
 collection: projects
 description: Status report generation and conversational Q&A about a project. Synthesizes activity logs, action items, decisions, milestones, ideas, and the project brief into coherent views for stakeholders and managers.
 stateful: false

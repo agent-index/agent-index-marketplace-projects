@@ -1,7 +1,7 @@
 ---
 name: share-idea
 type: task
-version: 3.0.0
+version: 3.0.4
 collection: projects
 description: Promotes a private idea to the project's shared space and invites collaborators with specific assignments.
 stateful: false

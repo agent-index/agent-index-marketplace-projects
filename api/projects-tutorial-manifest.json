@@ -4,7 +4,7 @@
   "display_name": "Projects Tutorial",
   "collection": "projects",
   "collection_version": "3.0.4",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "eol_date": null,
   "eol_warning_days": 60,
   "stateful": false,
@@ -13,6 +13,9 @@
   "dependency_status": "complete",
   "missing_dependencies": [],
   "parameter_provenance": {},
-  "dependencies": { "skills": [], "tasks": [] },
+  "dependencies": {
+    "skills": [],
+    "tasks": []
+  },
   "external_dependencies": []
 }

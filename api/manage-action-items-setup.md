@@ -1,7 +1,7 @@
 ---
 name: manage-action-items-setup
 type: setup
-version: 3.0.0
+version: 3.0.4
 collection: projects
 description: Setup for the manage-action-items task
 target: manage-action-items

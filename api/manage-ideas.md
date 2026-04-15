@@ -44,7 +44,7 @@ On demand, whenever a member wants to work with project ideas.
 
 Read `collection-setup-responses.md` via `aifs_read` to get feature flags.
 
-**Tool selection:** Operations on the member's private workspace (`/members/{member_hash}/ideas/`) use native Read/Write tools. Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` MCP tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
+**Tool selection:** Operations on the member's private workspace (`/members/{member_hash}/ideas/`) use native Read/Write tools. Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
 
 If `ideas_enabled` is `false`: halt with appropriate message.
 

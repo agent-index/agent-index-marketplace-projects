@@ -40,7 +40,7 @@ Format: [MAJOR.MINOR.PATCH] — YYYY-MM-DD
 ## [3.0.0] — 2026-03-25
 
 ### Changed
-- `agent_index_min_version` bumped to `2.0.0` — requires agent-index-core v2.0.0 with MCP server support
+- `agent_index_min_version` bumped to `2.0.0` — requires agent-index-core v2.0.0 with remote filesystem support
 - All `@ai:fs-setup` references updated to `@ai:member-bootstrap`
 - Shared project data operations (`/shared/projects/`) now reference `aifs_*` MCP tools for remote filesystem access
 - `members-registry.json` reads updated to use `aifs_read` with corrected path (`/members-registry.json`)

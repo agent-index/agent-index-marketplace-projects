@@ -46,7 +46,7 @@ On demand. Also surfaced at session-start if the member has open or newly unbloc
 
 Read `collection-setup-responses.md` via `aifs_read` to get feature flags.
 
-**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` MCP tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
+**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
 
 If `action_items_enabled` is `false`: halt with appropriate message.
 

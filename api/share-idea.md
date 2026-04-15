@@ -47,7 +47,7 @@ On demand, when a member decides their private idea is ready for collaboration.
 
 Read `collection-setup-responses.md` via `aifs_read` to get `shared_projects_path`, `ideas_enabled`, `action_items_enabled`, `activity_log_enabled`, `comms_channel_enabled`.
 
-**Tool selection:** Operations on the member's private workspace (`/members/{member_hash}/ideas/`) use native Read/Write tools. Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` MCP tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
+**Tool selection:** Operations on the member's private workspace (`/members/{member_hash}/ideas/`) use native Read/Write tools. Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
 
 If `ideas_enabled` is `false`: halt with appropriate message.
 

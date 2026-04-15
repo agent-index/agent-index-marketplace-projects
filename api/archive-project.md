@@ -43,7 +43,7 @@ The member identifies which project to archive and optionally provides an archiv
 
 Read `collection-setup-responses.md` via `aifs_read` to get `shared_projects_path`.
 
-**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` MCP tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
+**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
 
 If the member named a project in their invocation: use that name. If not: ask "Which project would you like to archive?"
 

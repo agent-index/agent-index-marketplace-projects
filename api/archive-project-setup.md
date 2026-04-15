@@ -27,7 +27,7 @@ This setup takes about one minute. It connects your archive-project task to your
 ### Org-Mandated Parameters [org-mandated]
 
 **shared_projects_path** [org-mandated]
-- Description: The remote filesystem path where all project data is stored (accessed via `aifs_*` MCP tools)
+- Description: The remote filesystem path where all project data is stored (accessed via `aifs_*` tools)
 - Value source: injected from collection org-setup-responses
 - Member visibility: read-only
 

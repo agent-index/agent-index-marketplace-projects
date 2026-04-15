@@ -52,7 +52,7 @@ The cadence is a suggestion surfaced at session-start, not an automated schedule
 
 Read `collection-setup-responses.md` via `aifs_read` to get `channel_monitor_enabled`, `comms_platform`, `activity_log_enabled`, `action_items_enabled`.
 
-**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` MCP tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
+**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
 
 If `channel_monitor_enabled` is `false`: halt with appropriate message.
 

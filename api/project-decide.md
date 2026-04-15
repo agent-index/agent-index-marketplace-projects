@@ -47,7 +47,7 @@ On demand, whenever a project direction is set, an approach is chosen, or a sign
 
 Read `collection-setup-responses.md` via `aifs_read` to get feature flags.
 
-**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` MCP tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
+**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
 
 If `activity_log_enabled` is `false`: surface "Decision recording requires activity logging to be enabled. Contact your org admin." Halt.
 

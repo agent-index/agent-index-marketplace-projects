@@ -6,7 +6,7 @@
   "author": "agent-index",
   "license": "proprietary",
   "category": "project-management",
-  "agent_index_min_version": "2.0.0",
+  "agent_index_min_version": "3.0.0",
   "api": [
     "create-project",
     "edit-project",

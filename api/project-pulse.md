@@ -48,7 +48,7 @@ On demand, whenever a stakeholder or manager wants a project update. Can be run 
 
 Read `collection-setup-responses.md` via `aifs_read` to get feature flags, especially `project_pulse_enabled` and `project_pulse_report_sections`.
 
-**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` MCP tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
+**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
 
 If `project_pulse_enabled` is `false`: halt with appropriate message.
 

@@ -34,7 +34,7 @@ Full project lifecycle management for agent-index. Create projects with structur
 
 ## Project Data Location
 
-All project data is stored on the org's remote filesystem (accessed via `aifs_*` MCP tools) at the path configured during collection setup (default: `/shared/projects/`). This is shared org-level data — not stored in individual member workspaces. Ideas start private in the member's local workspace and are promoted to shared space when shared.
+All project data is stored on the org's remote filesystem (accessed via `aifs_*` tools) at the path configured during collection setup (default: `/shared/projects/`). This is shared org-level data — not stored in individual member workspaces. Ideas start private in the member's local workspace and are promoted to shared space when shared.
 
 ## Project Structure
 

@@ -22,15 +22,23 @@ This setup configures how the Projects collection works across your org. It cove
 
 ## Org-Level Parameters
 
-### Shared Projects Directory
+### Visibility Defaults (4.0 — replaces the `shared_projects_path` parameter)
 
-**shared_projects_path**
-- Description: The remote filesystem path (under `/shared/`) where all project data will be stored. All members with access to this collection will read and write project data here via `aifs_read`/`aifs_write`.
-- Applies to: create-project, edit-project, archive-project, unarchive-project
-- Interview prompt: "Where should project data be stored? The default is `/shared/projects/` — does that work for your org, or do you need a different path?"
-- Accepted values: Any valid path on the remote filesystem (under `/shared/`) that exists and is writable via `aifs_write`
-- Default: `/shared/projects/`
-- Implication of choices: All members use the same path. If you change this after projects have been created, existing project data will need to be moved manually.
+The commons is the FIXED path `/shared/projects/` (existing projects already live there); private
+projects and ideas live in each member's own My Drive. What the org configures is the creation
+prompts:
+
+**projects_default_visibility**
+- Description: Which tier is pre-selected when a member creates a project.
+- Accepted values: `org_public_first` | `ask` | `private_first`
+- Default: `org_public_first` (design decision 1: projects are public by default — real org work
+  belongs in the commons, which the org keeps regardless of departures)
+
+**ideas_default_visibility**
+- Description: Which tier is pre-selected when a member creates an idea.
+- Accepted values: `private_first` | `ask` | `project_first`
+- Default: `private_first` (design decision 2: ideas are private AND INVISIBLE by default —
+  premature visibility changes what people write down)
 
 ---
 
@@ -209,13 +217,9 @@ Activity logging is automatically enabled if any tracking feature (ideas, action
 - Accepted values: `true` | `false`
 - Default: `true`
 
-**ideas_require_private_stage**
-- Description: Controls whether ideas must start as private drafts, or whether members can create ideas directly in the shared project space.
-- Interview prompt (only if ideas_enabled is `true`): "Should ideas always start as private drafts before being shared? Or should members also be able to create ideas directly in the shared project space?"
-  - **Private first** — ideas always start in the member's private workspace. They must be explicitly shared to become visible to the project team.
-  - **Either** — members can choose to start private or go directly to shared.
-- Accepted values: `private_first` | `either`
-- Default: `either`
+*(4.0: `ideas_require_private_stage` is retired — superseded by `ideas_default_visibility` above.
+Private ideas are stored in the member's own My Drive and are invisible until shared or promoted;
+see share-idea for the three visibility moves.)*
 
 ---
 
@@ -281,41 +285,40 @@ Activity logging is automatically enabled if any tracking feature (ideas, action
 ## Setup Completion
 
 1. Write all collected parameter values to `collection-setup-responses.md`
-2. Verify that the `shared_projects_path` directory exists and is writable on the remote filesystem via `aifs_exists` and `aifs_write`. If it does not exist, prompt the admin: "The directory `{path}` does not exist on the remote filesystem yet. Would you like me to create it, or do you want to use a different path?"
-3. Initialize `projects-manifest.json` at `{shared_projects_path}/projects-manifest.json` on the remote filesystem via `aifs_write` if it does not already exist:
-```json
-{
-  "last_updated": "{today}",
-  "projects": []
-}
-```
-4. Confirm to admin with a summary of everything configured:
+2. Ensure the discovery index `/shared/projects-index/` exists: check via `aifs_exists`; if missing, create it via `aifs_write '{"path":"/shared/projects-index/README.md","content":"Discovery index for projects and shared ideas. One pointer per discoverable item — content lives in the commons or in owners' member spaces. Managed by the projects collection; do not place project content here."}'`. This must exist before `install-collection` Step 5.5 applies the `collaborative-acls.json` grants. (4.0: `projects-manifest.json` is retired — on upgrades, `upgrade/3-to-4.md` overwrites it with a retired marker.)
+3. Confirm to admin with a summary of everything configured:
 > "Projects collection is configured. Here's what was set:
-> - Project data location: {shared_projects_path}
+> - Project visibility default: {projects_default_visibility} (commons at /shared/projects/; private projects in members' own spaces, invisible until shared)
+> - Idea visibility default: {ideas_default_visibility}
 > - Roles configuration: {plain-language description of roles_config choice}
 > {if org_roles defined}: - Org roles: {list}
 > - Project brief: {enabled/disabled} {if enabled: list of accepted sections with required/optional}
 > - Milestones: {enabled/disabled} {if enabled: required/optional}
 > - Comms channel: {enabled/disabled} {if enabled: platform, naming template, enforcement, archive behavior}
 > - Activity logging: {enabled/disabled}
-> - Ideas: {enabled/disabled} {if enabled: private_first/either}
+> - Ideas: {enabled/disabled}
 > - Action items: {enabled/disabled}
 > - Channel monitoring: {enabled/disabled} {if enabled: cadence}
 > - Project pulse: {enabled/disabled} {if enabled: report sections}
 >
-> Members can now install the project tasks via '@ai:setup'. They'll be able to create and manage projects at {shared_projects_path}."
+> Members can now install the project tasks via '@ai:setup'."
 
 ---
 
 ## Upgrade Behavior
 
 ### Preserved Responses
-- `shared_projects_path` — always preserved; changing this would orphan existing project data
 - `org_roles` — preserved; org admin must explicitly update roles through a separate edit flow
 - `brief_sections` — preserved; changing section requirements does not affect existing projects
 - `comms_platform` — preserved; changing platforms does not migrate existing channels
 - `comms_channel_naming_template` — preserved; changing the template does not rename existing channels
-- `ideas_require_private_stage` — preserved; changing does not affect existing ideas
+
+### Reset on Upgrade (3.x → 4.0)
+- `shared_projects_path` — **removed**: the commons is the fixed `/shared/projects/`; delete the response during upgrade.
+- `ideas_require_private_stage` — **removed**: superseded by `ideas_default_visibility`.
+
+### Requires Admin Attention (3.x → 4.0)
+- Run `upgrade/3-to-4.md`'s admin half (project inventory → pointer build; gated-idea review; manifest retirement) BEFORE `install-collection` Step 5.5 provisioning. See the CHANGELOG's Requires Admin Attention section.
 - `channel_monitor_cadence` — preserved; safe to change at any time
 - `project_pulse_report_sections` — preserved; safe to change at any time
 

@@ -1,7 +1,7 @@
 ---
 name: update-project
 type: task
-version: 3.0.4
+version: 4.0.0
 collection: projects
 description: The primary input mechanism for project updates — share progress, report blockers, update action items, and log what's happening. Lightweight and conversational.
 stateful: false
@@ -41,11 +41,13 @@ On demand, whenever a member has something to report. Designed for frequent, lig
 
 ### Step 1: Read Configuration and Identify Project
 
-Read `collection-setup-responses.md` via `aifs_read` to get `shared_projects_path`, `activity_log_enabled`, `action_items_enabled`.
+Read `collection-setup-responses.md` via `aifs_read` to get `activity_log_enabled`, `action_items_enabled`. Read local `member-index.json` for `member_hash` + `member_folder_id`.
 
-**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
+**Tier resolution (4.0):** resolve the project via `/shared/projects-index/` or the member's own private projects → base path (org-public = commons path; private = `id:{folder_id}/`). Write authority is tier-mechanical (org-public = any member, activity-attributed; private = owner/collaborators). `projects-manifest.json` is retired.
 
-If the member named a project: find it in `projects-manifest.json` via `aifs_read`. If not: ask "Which project are you updating?"
+**Artifact placement rule (design decisions 3/6):** artifacts attached during an update default INTO the project's `artifacts/` (or the named idea's folder) — access inherits structurally, no prompt beyond confirm. Explicit overrides: widening (e.g., org-public artifact from a private project) requires the explicit warning + a hygiene pointer (`type: artifact`, owner, NO parent reference); narrowing relocates into the owner's space + grants via share-idea's grant procedure.
+
+If the member named a project: resolve as above. If not: ask "Which project are you updating?"
 
 Read the project's `current-state.md` via `aifs_read` to understand the current context.
 

@@ -1,0 +1,22 @@
+{
+  "version": "1.0",
+  "collection": "projects",
+  "description": "Declarative folder ACLs provisioned at install/upgrade via install-collection Step 5.5 (permission-change-helper, admin Accepts). The /shared/projects/ commons grant is what the 3.x audit found missing (members were reader-only on /shared, breaking every project write for non-admins). UPGRADE ORDERING (4.0): the commons grant must not be applied to an org upgrading from 3.x until the admin completes the gated-idea review in upgrade/3-to-4.md.",
+  "grants": [
+    {
+      "path": "/shared/projects/",
+      "recipient": "{all_members_group}",
+      "role": "writer",
+      "inherit": true,
+      "purpose": "Org-public project commons: uniform member write on projects, action items, decisions, artifacts, activity logs — with task-level changelog attribution."
+    },
+    {
+      "path": "/shared/projects-index/",
+      "recipient": "{all_members_group}",
+      "role": "writer",
+      "inherit": true,
+      "purpose": "Discovery index: members write pointer records for org-public projects and for private items they share."
+    }
+  ],
+  "notes": "Private projects and ideas live in members' own My Drives and are never provisioned here — owners grant per-person via permission-change-helper. NOTE for admins: /shared/projects/ also hosts org record spaces (e.g. core-improvements) — the all@ writer grant covers them too, which matches their open-commons usage; the pointer index is what distinguishes actual projects."
+}

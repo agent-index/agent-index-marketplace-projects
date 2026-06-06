@@ -1,7 +1,7 @@
 ---
 name: archive-project
 type: task
-version: 3.0.4
+version: 4.0.0
 collection: projects
 description: Archives an active project, marking it as no longer relevant and making it read-only. Optionally archives the project's comms channel. Archived projects remain in the shared registry but cannot be edited.
 stateful: false
@@ -32,8 +32,8 @@ The member identifies which project to archive and optionally provides an archiv
 
 ### Outputs
 
-- `{shared_projects_path}/{project-slug}/project.md` — status updated to `archived`, archive note added
-- `{shared_projects_path}/projects-manifest.json` — project entry status updated to `archived`
+- `{base}/project.md` — status updated to `archived`, archive note added
+- `/shared/projects-index/{owner_hash}-{slug}.json` — status updated (when a pointer exists)
 
 ---
 
@@ -41,13 +41,13 @@ The member identifies which project to archive and optionally provides an archiv
 
 ### Step 1: Read Org Configuration and Identify Project
 
-Read `collection-setup-responses.md` via `aifs_read` to get `shared_projects_path`.
+Read local `member-index.json` (`member_hash`, `member_folder_id`).
 
-**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
+**Tier resolution (4.0):** resolve the project via `/shared/projects-index/` or the member's own private projects → base path. Authority: org-public = any member may archive (attributed); private = **owner-only** for lifecycle. `projects-manifest.json` is retired.
 
 If the member named a project in their invocation: use that name. If not: ask "Which project would you like to archive?"
 
-Read `projects-manifest.json` via `aifs_read` and find the matching project. If the project is already `archived`:
+If the project is already `archived`:
 
 **On already archived:** Surface: "'{name}' is already archived. If you want to bring it back, say '@ai:unarchive-project' or 'unarchive {name}'." Halt.
 
@@ -122,9 +122,9 @@ On confirmation:
    - Add `archive_note: {note}` (empty string if none provided)
    - Update `last_updated: {today YYYY-MM-DD}`
 
-2. Update `projects-manifest.json`:
-   - Set `status: archived` on the project entry
-   - Update `last_updated` on the manifest
+2. Update the pointer (if one exists — org-public or ever-shared private): overwrite `/shared/projects-index/{owner_hash}-{slug}.json` with `status: archived`, `last_updated`. Never delete it. Invisible private projects have no pointer — nothing to update. (4.0 — manifest retired.)
+
+   **Private-tier note:** a never-shared private project may instead be PERMANENTLY deleted by its owner on explicit request ("hard delete" with a confirmation phrase including "permanently") — it was invisible, so it vanishes cleanly with no index residue. Ever-shared/public projects always keep their name-record.
 
 3. If channel archival was confirmed or automatic:
    - Use the platform's MCP connector to archive the channel.
@@ -132,7 +132,7 @@ On confirmation:
    - If the connector is unavailable: note: "I couldn't archive the channel on {comms_platform} — you may need to do this manually." Leave `comms_channel.status: active` in the project record.
 
 4. Confirm to member:
-   > "'{name}' has been archived. Its files are preserved at `{shared_projects_path}/{slug}/`. To reactivate it, say '@ai:unarchive-project' or 'unarchive {name}'."
+   > "'{name}' has been archived. Its files are preserved in place. To reactivate it, say '@ai:unarchive-project' or 'unarchive {name}'."
 
 **On any write failure:** Surface the specific file that failed. Report the current state of each file clearly so the member can assess whether the project is in a consistent state.
 
@@ -160,6 +160,6 @@ Do not write before the Step 4 confirmation.
 
 ### Edge Cases
 
-If `project.md` can be read but `projects-manifest.json` cannot be written: write the status change to `project.md` anyway, then surface a warning: "The project record was archived, but the projects manifest couldn't be updated. The project may still appear as active in project listings until the manifest is repaired. Contact your org admin."
+If `project.md` can be read but the pointer cannot be written: write the status change to `project.md` anyway, then surface a warning: "The project record was archived, but the index pointer couldn't be updated. The project may still appear as active in project listings until the manifest is repaired. Contact your org admin."
 
 If the member confirms archiving and then immediately says "wait, undo that": read the current state of the file. If the write has already occurred, surface: "The archive has been applied. To reverse it, say '@ai:unarchive-project' or 'unarchive {name}'." Do not attempt to reverse a completed write silently.

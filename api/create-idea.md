@@ -1,9 +1,9 @@
 ---
 name: create-idea
 type: task
-version: 3.0.4
+version: 4.0.0
 collection: projects
-description: Creates a new idea for a project — a private exploration space for developing concepts, designs, or proposals before sharing them with the team.
+description: Creates a new idea for a project — private by default and INVISIBLE (stored in the member's own My Drive; no org-visible record exists until shared or promoted via share-idea). The creation prompt also offers project-resident creation (the idea lives in the project and adopts its tier). Artifacts attached at creation inherit the idea's access structurally.
 stateful: false
 produces_artifacts: true
 produces_shared_artifacts: false
@@ -17,11 +17,11 @@ writes_to: null
 
 ## About This Task
 
-An idea is a private workspace for developing a concept, design, or proposal related to a project. Ideas let members think, iterate, and refine without exposing unfinished thinking to the project team. When an idea is ready, the member shares it via `share-idea`, which promotes it to the project's shared space and invites collaborators.
+An idea is a private workspace for developing a concept, design, or proposal related to a project. Ideas let members think, iterate, and refine without exposing unfinished thinking — **private ideas are invisible** (design decision 2): no org-visible record of any kind exists until the owner acts. When ready, `share-idea` offers three moves: share with specific people (per-person grants), promote into the project (relocation, adopts the project's tier), or unshare.
 
-Ideas are stored in the member's private workspace at `/members/{member_hash}/ideas/{project-slug}/{idea-slug}/`. They are invisible to other members until explicitly shared.
+Private ideas are stored in the member's own My Drive at `id:{member_folder_id}/ideas/{project-slug}/{idea-slug}/` (4.0 — previously the local workspace; the remote member space is what makes selective sharing possible). Artifacts placed in the idea's folder inherit its access structurally.
 
-If the org admin has set `ideas_require_private_stage` to `either`, members can also create ideas directly in the shared project space (skipping the private stage). In this case the idea is immediately visible to the project team.
+Per the org's `ideas_default_visibility` (normally `private_first`), the member may instead create the idea project-resident — directly in the project's `ideas/`, adopting the project's tier (org-public project → team-and-org visible; private project → visible to the project's members).
 
 ### Inputs
 
@@ -29,15 +29,13 @@ The member provides: which project this idea belongs to, a title, a description,
 
 ### Outputs
 
-For private ideas:
-- `/members/{member_hash}/ideas/{project-slug}/{idea-slug}/idea.md` — the idea record
-- `/members/{member_hash}/ideas/{project-slug}/{idea-slug}/artifacts/` — directory for files
-- `/members/{member_hash}/ideas/{project-slug}/{idea-slug}/references/` — directory for external links
+For private ideas (default):
+- `id:{member_folder_id}/ideas/{project-slug}/{idea-slug}/idea.md` — the idea record (+ `/artifacts/`, `/references/`)
+- NO pointer, NO in-project residue — invisible until share-idea acts
 
-For direct-to-shared ideas (if `ideas_require_private_stage` is `either` and member chooses shared):
-- `{shared_projects_path}/{project-slug}/ideas/{idea-slug}/idea.md` — the idea record
-- Plus artifacts and references directories in the project space
-- Activity log entry recording the idea creation
+For project-resident ideas:
+- `{project base}/ideas/{idea-slug}/idea.md` (+ artifacts/, references/) — tier follows the project
+- Activity log entry recording the idea creation (attributed)
 
 ### Cadence & Triggers
 
@@ -49,13 +47,13 @@ On demand, whenever a member wants to start exploring a concept for a project.
 
 ### Step 1: Read Org Configuration and Identify Project
 
-Read `collection-setup-responses.md` via `aifs_read` to get `shared_projects_path`, `ideas_enabled`, and `ideas_require_private_stage`.
+Read `collection-setup-responses.md` via `aifs_read` to get `ideas_enabled` and `ideas_default_visibility` (4.0 — replaces `ideas_require_private_stage`). Read local `member-index.json` for `member_hash` and `member_folder_id` (missing → "@ai:update" self-provision halt).
 
-**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
+**Tool selection:** the member's private remote space and project locations both use `aifs_*`; private space via `id:{member_folder_id}/...` anchors (standards.md § "Addressing").
 
 If `ideas_enabled` is `false`: surface "Ideas aren't enabled for your org's project setup. Contact your org admin if you'd like this feature." Halt.
 
-If the member named a project in their invocation: use that name. Read `projects-manifest.json` via `aifs_read` and find the matching active project.
+If the member named a project in their invocation: resolve it via the pointer index `/shared/projects-index/` (org-public and shared projects) or the member's own private projects (4.0 — `projects-manifest.json` is retired).
 
 If the member did not name a project: ask "Which project is this idea for?"
 
@@ -67,12 +65,11 @@ If the project cannot be found or is archived: surface the issue and halt.
 
 ### Step 2: Determine Visibility
 
-**If `ideas_require_private_stage` is `private_first`:**
-Inform the member: "This idea will start as a private draft in your workspace. When you're ready, you can share it with the project team via '@ai:share-idea'." Set visibility to `private`.
+Per `ideas_default_visibility` (normally `private_first`), ask:
 
-**If `ideas_require_private_stage` is `either`:**
-Ask: "Would you like to start this as a private draft (only you can see it), or create it directly in the shared project space?"
-Record the member's choice.
+> *"Should this idea be **private** (default — in your own space, invisible to everyone until you share or promote it) or created **in the project** (the project team sees it{ — org-visible, since the project is public})?"*
+
+Record the choice. Private → base = `id:{member_folder_id}/ideas/{project-slug}/{idea-slug}/`. Project-resident → base = `{project base}/ideas/{idea-slug}/` (requires write access to the project: org-public = anyone; private project = owner/collaborators, else suggest private creation + share-idea later).
 
 **On success:** Proceed to Step 3.
 
@@ -128,9 +125,7 @@ Wait for confirmation.
 
 On confirmation:
 
-1. Create the idea directory structure:
-   - Private: `/members/{member_hash}/ideas/{project-slug}/{idea-slug}/artifacts/` and `/references/`
-   - Shared: `{shared_projects_path}/{project-slug}/ideas/{idea-slug}/artifacts/` and `/references/`
+1. Create the idea directory structure at `{base}` (`/artifacts/` and `/references/` inside it — artifacts inherit the idea's access structurally; no separate permissions ever needed at creation).
 
 2. Write `idea.md`:
    ```
@@ -159,7 +154,7 @@ On confirmation:
 
 3. Copy any provided artifact files to `/artifacts/`.
 
-4. If the idea is direct-to-shared: append an activity log entry to `{shared_projects_path}/{project-slug}/activity/activity-log.jsonl`:
+4. If the idea is project-resident: append an activity log entry to `{project base}/activity/activity-log.jsonl` (attributed):
    ```json
    {
      "timestamp": "{ISO 8601}",
@@ -192,7 +187,7 @@ Never create an idea for an archived project.
 
 Never write a private idea anywhere other than the member's own `/members/{member_hash}/ideas/` directory.
 
-Never create a direct-to-shared idea if `ideas_require_private_stage` is `private_first`.
+Never create a project-resident idea in a project the member cannot write (private project, non-member) — suggest private creation + share-idea instead.
 
 The idea slug must be unique within its target directory. Always check for collisions.
 

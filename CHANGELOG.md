@@ -6,6 +6,65 @@ Format: [MAJOR.MINOR.PATCH] — YYYY-MM-DD
 
 ---
 
+## [4.0.0] — 2026-06-06 — two-tier access model (MAJOR, breaking)
+
+### Requires Admin Attention (read BEFORE provisioning)
+
+**The upgrade ships ACL and setup-interview changes** (`collaborative-acls.json` is new;
+`projects_default_visibility`/`ideas_default_visibility` replace `shared_projects_path`/
+`ideas_require_private_stage`) — upgrade-collection Step 6.5 will flag provisioning. **ORDERING:
+run `upgrade/3-to-4.md`'s admin half (project inventory → pointer-index build; gated-idea review;
+`projects-manifest.json` retirement) BEFORE `@ai:install-collection projects` applies the
+commons grants.** The inventory must touch ONLY real projects (directories with `project.md`) —
+`/shared/projects/` also hosts org record spaces that are not projects.
+
+### Why a MAJOR
+
+The cross-collection access audit's final row: under least-privilege, members were reader-only on
+`/shared`, so every 3.x project write (action items, updates, decisions, idea promotion, digests)
+failed for non-admins. 4.0 fixes it with the org's two proven access models, plus the visibility
+outcomes decided 2026-06-06 (design doc 10, all eight decisions).
+
+### Changed
+
+- **Projects are two-tier.** ORG-PUBLIC (default): `/shared/projects/{slug}/` commons, uniform
+  `all@` writer (install-time grant), every write activity-attributed. PRIVATE: the owner's own
+  My Drive, **invisible until shared** — no org-visible record exists; the roster IS the grant
+  list (adding a member = an owner-approved collaborator grant, Accept-gated and verified; the
+  first member ends invisibility). New **transition-project** moves projects between tiers
+  (copy → pointer flip → stub; going-private re-grants the roster and stubs the commons original).
+- **Ideas are private-and-invisible by default**, stored at `id:{member_folder_id}/ideas/…`
+  (4.0 — previously the local workspace; remote member space is what makes selective sharing
+  possible). **share-idea reworked into three moves**: share with people (per-person grants +
+  pointer-on-first-share), promote into the project (relocation + tier adoption — the 3.x flow),
+  unshare (revoked pointer). Legacy local ideas get a one-time move offer on first touch.
+- **Artifacts inherit structurally** — they live inside their parent item's folder; no per-item
+  permissions. Widening overrides (publishing an artifact beyond its parent's audience) require
+  an explicit warning + a hygiene pointer that never names the private parent; narrowing
+  relocates into the owner's space + grants.
+- **Action items, decisions, status reports, digests are project-record material** — tier follows
+  the project, no per-item prompts; private-project action items can only be assigned to people
+  with access (prompt-to-add-member guard).
+- **Discovery via `/shared/projects-index/`** (pointer per discoverable item);
+  `projects-manifest.json` retired. Archive/unarchive update pointer status; never-shared private
+  projects may be permanently deleted by their owner (clean vanish); ever-shared items keep a
+  permanent name-record.
+- All 13 capabilities reworked or rewritten to 4.0.0; projects-tutorial rewritten for the model.
+
+### Added
+
+- `collaborative-acls.json` — `all@` writer on `/shared/projects/` and `/shared/projects-index/`.
+- `upgrade/3-to-4.md` — REQUIRED MAJOR migration (admin inventory + gated-idea review with
+  role-divergence detection + manifest retirement + provisioning order; member half optional).
+- `transition-project` task (+ setup + manifest + routing triggers).
+
+### Requirements
+
+- agent-index-core **3.9.0+**, gdrive adapter **2.5.0+**, permission-helper-go **0.4.1+**.
+- 3.x line: `eol_date` set 90 days from this release (2026-09-04) per EOL policy.
+
+---
+
 ## [3.0.6] — 2026-05-02
 
 ### Added

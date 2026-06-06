@@ -1,9 +1,9 @@
 ---
 name: create-project
 type: task
-version: 3.0.4
+version: 4.0.0
 collection: projects
-description: Creates a new project in the org's shared project registry, including ownership, brief, milestones, team members, roles, optional comms channel, and project tracking directories.
+description: Creates a new project — org-public by default (the org commons; every member can see and contribute) or private (the member's own My Drive, invisible until shared) — including ownership, brief, milestones, team members, roles, optional comms channel, and project tracking directories. Org-public projects get a discovery pointer; private ones don't until shared.
 stateful: false
 produces_artifacts: false
 produces_shared_artifacts: false
@@ -20,11 +20,11 @@ writes_to: null
 
 ## About This Task
 
-Creating a project establishes the foundational record that all subsequent project work hangs from. This task guides the member through defining the project's name, ownership, brief, milestones, team members, roles, and communications channel — then writes the project record to the org's shared project registry and registers it in the projects manifest.
+Creating a project establishes the foundational record that all subsequent project work hangs from. This task guides the member through the visibility choice (org-public default ↔ private), then the project's name, ownership, brief, milestones, team members, roles, and communications channel — then writes the project record at the tier-resolved location and (org-public only) the discovery pointer.
 
 Which steps appear during project creation depends on what the org admin enabled during collection setup. The core steps (name, owner/PM, roles, members) are always present. Optional steps (project brief, milestones, comms channel) appear only if the org admin accepted them during setup.
 
-A project created through this task is immediately visible to all members with access to the shared projects directory. The project record is the source of truth for everything about the project.
+An org-public project is immediately visible and writable to every member (uniform commons access; writes are activity-attributed). A private project is invisible to everyone but the owner until members are added (each addition is a Drive grant the owner approves — see edit-project) or it transitions public. The project record is the source of truth for everything about the project.
 
 ### Inputs
 
@@ -34,12 +34,12 @@ The member provides: project name, owner, project manager, and — depending on 
 
 Two files are written upon successful completion:
 
-- `{shared_projects_path}/{project-slug}/project.md` — the full project record
-- `{shared_projects_path}/projects-manifest.json` — updated with the new project entry
+- `{base}/project.md` — the full project record (base = `/shared/projects/{slug}/` or `id:{member_folder_id}/projects/{slug}/` per tier)
+- `/shared/projects-index/{member_hash}-{slug}.json` — discovery pointer (org-public only; private projects are invisible until shared)
 
 The project directory structure is also created:
 ```
-{shared_projects_path}/{project-slug}/
+{base}/{project-slug}/
   project.md
   /assets/
   /state/
@@ -64,8 +64,9 @@ Run once per project at project inception. Not repeatable for the same project �
 
 ### Step 1: Read Org Configuration
 
-Read `collection-setup-responses.md` from the collection's setup directory on the remote filesystem via `aifs_read`. Extract:
-- `shared_projects_path` — where to write project data
+Read `collection-setup-responses.md` from the collection's setup directory on the remote filesystem via `aifs_read`. Also read the local `member-index.json` for `member_hash` and **`member_folder_id`** (missing → "Your private member space isn't set up — run `@ai:update` and retry." Halt; self-provisioning, core 3.9.0+). Extract from setup responses:
+- `projects_default_visibility` — `org_public_first` (default) | `ask` | `private_first` — shapes the Step 1.5 prompt
+- `ideas_default_visibility` — used by create-idea, read here for the confirmation summary
 - `roles_config` — how roles are handled (`org-mandated`, `org-suggested`, or `project-defined`)
 - `org_roles` — the org-defined roles list (if applicable)
 - `brief_enabled` — whether the structured project brief is enabled
@@ -81,11 +82,23 @@ Read `collection-setup-responses.md` from the collection's setup directory on th
 - `ideas_enabled` — whether project ideas are enabled
 - `action_items_enabled` — whether action items are enabled
 
-Verify that `shared_projects_path` exists and is writable on the remote filesystem (via `aifs_exists` and a test `aifs_write`). If not:
+Verify auth (`aifs_auth_status`, re-auth on failure, member-bootstrap guidance if unrecoverable). The commons root is the fixed path `/shared/projects/` (the 3.x `shared_projects_path` parameter is retired in 4.0).
 
-**On failure:** Check `aifs_auth_status()`. If `authenticated: false`, attempt automatic re-authentication via `aifs_authenticate` and retry. If re-auth fails or the directory is still inaccessible: surface "The shared projects directory at `{path}` isn't accessible. I tried to restore your remote connection but wasn't able to. Try '@ai:member-bootstrap' to troubleshoot, or contact your org admin if the directory hasn't been created yet." Halt.
+**On success:** Proceed to Step 1.5.
 
-**On success:** Proceed to Step 2.
+---
+
+### Step 1.5: The visibility question (new in 4.0)
+
+Per the org default (`projects_default_visibility`, normally `org_public_first`), ask:
+
+> *"Should this project be **org-public** (default — it lives in the org commons; every member can see and contribute to it, and the org keeps it regardless of who comes or goes) or **private** (it lives in your own space; invisible to everyone until you add members or make it public)?"*
+
+Custody guidance, once per session: *"Rule of thumb: real org work belongs public; private is for exploration and pre-announcement work."*
+
+Record `tier` (`org_public` | `private`). This sets the write base for everything below:
+- org_public → `base = /shared/projects/{slug}/`
+- private → `base = id:{member_folder_id}/projects/{slug}/` (the member's own My Drive — owner-controlled; members added later become collaborator grants, see edit-project)
 
 ---
 
@@ -97,9 +110,9 @@ Accept any non-empty string. Generate the slug immediately: lowercase, spaces an
 
 Show the member the generated slug: "I'll use `{slug}` as the project's directory name — that's how it will appear in the filesystem."
 
-Check whether `{shared_projects_path}/{slug}/` already exists. If it does:
+Duplicate check (4.0): consult the pointer index — `aifs_exists("/shared/projects-index/{member_hash}-{slug}.json")` and scan the index for same-name pointers from any owner. For an org-public creation also check `aifs_exists("/shared/projects/{slug}/")`. (Invisible private projects cannot be checked — accepted trade-off, design decision 2/8.) If a match:
 
-**On conflict:** Surface: "A project with the slug `{slug}` already exists. This might be '{existing project name}'. Would you like to edit that project instead, or choose a different name for this new project?" Do not proceed until resolved.
+**On conflict:** Surface: "A project named `{name}` already exists ({owner}, {tier}). Would you like to edit that project instead, or choose a different name?" Do not proceed until resolved.
 
 **On success:** Proceed to Step 3 with confirmed name and slug.
 
@@ -269,9 +282,9 @@ Wait for explicit confirmation before writing anything.
 
 On confirmation:
 
-1. Create the project directory structure on the remote filesystem via `aifs_write`:
+1. Create the project directory structure at `{base}` (tier-resolved in Step 1.5: org-public → `/shared/projects/{slug}/`; private → `id:{member_folder_id}/projects/{slug}/`) via `aifs_write`:
    ```
-   {shared_projects_path}/{slug}/
+   {base}
      /assets/
      /state/
      /artifacts/
@@ -291,6 +304,7 @@ On confirmation:
    name: {name}
    slug: {slug}
    status: active
+   visibility: {org_public | private}
    owner:
      display_name: {display_name}
      member_hash: {member_hash or null}
@@ -357,19 +371,24 @@ On confirmation:
    None yet.
    ```
 
-4. Read `projects-manifest.json` from the remote filesystem via `aifs_read`. Add the new entry:
-   ```json
-   {
-     "slug": "{slug}",
-     "name": "{name}",
-     "status": "active",
-     "owner": "{owner display_name}",
-     "owner_hash": "{owner member_hash or null}",
-     "created": "{today YYYY-MM-DD}",
-     "has_channel": {true or false}
-   }
-   ```
-   Update `last_updated` on the manifest. Write the file to the remote filesystem via `aifs_write`.
+4. **Discovery (replaces the 3.x `projects-manifest.json`, which is retired in 4.0):**
+   - **Org-public:** write the pointer `/shared/projects-index/{member_hash}-{slug}.json`:
+     ```json
+     {
+       "type": "project", "name": "{name}", "slug": "{slug}",
+       "owner": "{owner display_name}", "owner_hash": "{member_hash}",
+       "status": "active", "scope": "org_public",
+       "location": {"path": "/shared/projects/{slug}/"},
+       "created": "{today}", "last_updated": "{ISO}", "owner_departed": false
+     }
+     ```
+   - **Private:** write NO pointer — the project is invisible until the owner adds a member or
+     transitions it public (design decisions 5/8). Sharing later (edit-project) writes the pointer
+     hard-gated on verified grants.
+
+   **Private-tier extra:** `aifs_stat("id:{member_folder_id}/projects/{slug}")` → record the
+   resolved `project_folder_id` in the project.md frontmatter (`folder_id: {id}`) — edit-project's
+   grant specs and future pointers need the bare ID.
 
 5. If comms channel is enabled for this project: attempt to create the channel on the configured platform.
 
@@ -411,7 +430,8 @@ On confirmation:
    ```
 
 7. Confirm to member:
-   > "Project '{name}' has been created. You can find it at `{shared_projects_path}/{slug}/`. To edit it later, say '@ai:edit-project' or 'edit project {name}'."
+   > org-public: "Project '{name}' has been created in the org commons — every member can see and contribute to it. Edit it anytime with '@ai:edit-project'."
+   > private: "Project '{name}' has been created in your own space — invisible to everyone else. Add members with '@ai:edit-project' (each becomes a collaborator you approve), or make it org-public later with '@ai:transition-project'."
 
 **On any write failure:** Check `aifs_auth_status()`. If `authenticated: false`, attempt automatic re-authentication via `aifs_authenticate` and retry the failed write. If re-auth fails or the write still fails: surface the specific file that failed, leave any successfully written files in place, and advise the member to retry or say '@ai:member-bootstrap' to troubleshoot their remote filesystem connection.
 
@@ -435,7 +455,7 @@ No step is a hard blocker. Even when the org admin has marked a feature as "requ
 
 `project.md` must always be written with complete YAML frontmatter — no optional fields omitted. If a value was not collected (e.g., empty members list, no milestones), write it as an empty array, not as an absent field. Brief sections that were skipped are written as `*Not yet defined.*` in the body, not omitted.
 
-`projects-manifest.json` must always be valid JSON after writing. Read it before writing, parse it, add the entry, serialize it back. Never write the manifest as a string substitution — always parse and serialize properly.
+The discovery pointer must always be valid JSON after writing (parse-and-serialize, never string substitution). Pointers are overwrite-only (soft conventions); this task only ever CREATES a pointer for an org-public project — it never deletes or modifies existing index entries.
 
 ### Constraints
 
@@ -453,7 +473,7 @@ Comms channel creation is always best-effort. A failure to create a channel or i
 
 If the member provides a project name that generates a slug already in use but the existing project is archived: surface both options — "There's an archived project with the slug `{slug}`. You can create a new project with a different name, or contact your org admin about unarchiving the existing one."
 
-If `projects-manifest.json` does not exist at the expected path (e.g., collection was installed but setup was not completed): surface: "The projects manifest file is missing. This usually means the collection setup wasn't completed. Ask your org admin to run the Projects collection setup." Halt — do not create the manifest file from within this task.
+If `/shared/projects-index/` does not exist or isn't writable (org-public creation): the install's provisioning is incomplete — "Ask your org admin to run `@ai:install-collection projects` (Step 5.5 provisioning)." Halt. If the member's `member_folder_id` is missing (private creation): Step 1's self-provisioning guidance.
 
 If the member provides a project name with only special characters that produce an empty slug after normalization: ask for a different name.
 

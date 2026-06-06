@@ -1,7 +1,7 @@
 ---
 name: manage-action-items
 type: task
-version: 3.0.4
+version: 4.0.0
 collection: projects
 description: Create, view, assign, complete, reassign, and chain action items. Process the review queue from channel digests.
 stateful: false
@@ -46,11 +46,13 @@ On demand. Also surfaced at session-start if the member has open or newly unbloc
 
 Read `collection-setup-responses.md` via `aifs_read` to get feature flags.
 
-**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
+**Tier resolution (4.0):** read local `member-index.json` (`member_hash`, `member_folder_id`); resolve the project via `/shared/projects-index/` or the member's own private projects → base path. Action items are project-record material (design decision 4): they live in the project's `action-items.json`, tier follows the project, NO per-item prompts, and every commons write is activity-attributed. `projects-manifest.json` is retired.
 
 If `action_items_enabled` is `false`: halt with appropriate message.
 
-Identify the project (read `projects-manifest.json` via `aifs_read`). Read `{project}/action-items.json` via `aifs_read`.
+Read `{base}/action-items.json` via `aifs_read`.
+
+**Assignment guard (private projects):** assigning an item to someone who is not on the roster (= has no grant) would create an item they can't see. Prompt: "{name} doesn't have access to this private project — add them as a member first (`@ai:edit-project`), assign to someone with access, or leave unassigned?" Never silently create unreachable assignments.
 
 **On success:** Proceed to Step 2.
 

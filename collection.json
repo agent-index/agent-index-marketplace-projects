@@ -1,12 +1,12 @@
 {
   "name": "projects",
   "display_name": "Projects",
-  "version": "3.0.6",
-  "description": "Full project lifecycle management \u2014 create projects with structured briefs, track ideas from private exploration to actionable artifacts, manage action items with dependency chains, record decisions, monitor comms channels, and generate status reports for stakeholders.",
+  "version": "4.0.0",
+  "description": "Full project lifecycle management \u2014 create projects with structured briefs, track ideas from private exploration to actionable artifacts, manage action items with dependency chains, record decisions, monitor comms channels, and generate status reports. v4.0.0 (MAJOR, breaking): two-tier access model \u2014 projects are ORG-PUBLIC by default (the /shared/projects/ commons, uniform member write with activity attribution) or PRIVATE (the owner's own My Drive, INVISIBLE until shared; roster = grant list, owner-approved); ideas are PRIVATE AND INVISIBLE by default in owners' My Drives, with share-idea's three moves (share with people / promote into the project / unshare); artifacts inherit their parent item's access structurally; new transition-project task moves projects between tiers; discovery via the /shared/projects-index/ pointer index (projects-manifest.json retired). Fixes the 3.x non-admin write breakage (cross-collection access audit, final row). Requires agent-index-core 3.9.0+, adapter 2.5.0+, permission-helper-go 0.4.1+. 3.x upgrade: run upgrade/3-to-4.md's admin half (inventory + gated-idea review) BEFORE provisioning.",
   "author": "agent-index",
   "license": "proprietary",
   "category": "project-management",
-  "agent_index_min_version": "3.0.0",
+  "agent_index_min_version": "3.9.0",
   "api": [
     {
       "name": "create-project",
@@ -109,12 +109,47 @@
         {
           "phrase": "share an idea",
           "capability": "share-idea",
-          "description": "Share an idea with project collaborators"
+          "description": "Share an idea with specific people or promote it into the project"
         },
         {
           "phrase": "publish my idea",
           "capability": "share-idea",
-          "description": "Make an idea visible to the team"
+          "description": "Make an idea visible — to chosen people or the project team"
+        },
+        {
+          "phrase": "promote my idea",
+          "capability": "share-idea",
+          "description": "Move an idea into the project (the team move)"
+        },
+        {
+          "phrase": "unshare my idea",
+          "capability": "share-idea",
+          "description": "Revoke access to a shared idea"
+        }
+      ]
+    },
+    {
+      "name": "transition-project",
+      "triggers": [
+        {
+          "phrase": "make project public",
+          "capability": "transition-project",
+          "description": "Move a private project into the org commons"
+        },
+        {
+          "phrase": "publish project to the org",
+          "capability": "transition-project",
+          "description": "Move a private project into the org commons"
+        },
+        {
+          "phrase": "take project private",
+          "capability": "transition-project",
+          "description": "Move an org-public project into your own private space"
+        },
+        {
+          "phrase": "move project to my space",
+          "capability": "transition-project",
+          "description": "Move an org-public project into your own private space"
         }
       ]
     },

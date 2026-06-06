@@ -1,7 +1,7 @@
 ---
 name: unarchive-project
 type: task
-version: 3.0.4
+version: 4.0.0
 collection: projects
 description: Restores an archived project to active status, making it editable again and returning it to active project views. Optionally restores the project's comms channel.
 stateful: false
@@ -30,8 +30,8 @@ The member identifies which archived project to restore.
 
 ### Outputs
 
-- `{shared_projects_path}/{project-slug}/project.md` — status updated to `active`, archive fields cleared
-- `{shared_projects_path}/projects-manifest.json` — project entry status updated to `active`
+- `{base}/project.md` — status updated to `active`, archive fields cleared
+- `/shared/projects-index/{owner_hash}-{slug}.json` — status updated (when a pointer exists)
 
 ---
 
@@ -39,13 +39,13 @@ The member identifies which archived project to restore.
 
 ### Step 1: Read Org Configuration and Identify Project
 
-Read `collection-setup-responses.md` via `aifs_read` to get `shared_projects_path`.
+Read local `member-index.json` (`member_hash`, `member_folder_id`).
 
-**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
+**Tier resolution (4.0):** resolve the project via `/shared/projects-index/` (archived pointers included) or the member's own private projects → base path. Authority: org-public = any member (attributed); private = owner-only. `projects-manifest.json` is retired.
 
 If the member named a project in their invocation: use that name. If not: ask "Which archived project would you like to restore?"
 
-Read `projects-manifest.json` via `aifs_read` and find the matching project. If the project is already `active`:
+If the project is already `active`:
 
 **On already active:** Surface: "'{name}' is already active — there's nothing to unarchive. To edit it, say '@ai:edit-project' or 'edit project {name}'." Halt.
 
@@ -96,9 +96,7 @@ On confirmation:
    - Remove `archive_note` field
    - Update `last_updated: {today YYYY-MM-DD}`
 
-2. Update `projects-manifest.json`:
-   - Set `status: active` on the project entry
-   - Update `last_updated` on the manifest
+2. Update the pointer (if one exists): overwrite `/shared/projects-index/{owner_hash}-{slug}.json` with `status: active`, `last_updated`. Invisible private projects have no pointer — nothing to update. (4.0 — manifest retired.)
 
 3. If channel restoration was confirmed:
    - Use the platform's MCP connector to unarchive the channel.
@@ -132,7 +130,7 @@ Do not write before the Step 2 confirmation.
 
 ### Edge Cases
 
-If `project.md` can be read but `projects-manifest.json` cannot be written: write the status change to `project.md` anyway, then surface a warning: "The project record was restored, but the projects manifest couldn't be updated. The project may still appear as archived in project listings until the manifest is repaired. Contact your org admin."
+If `project.md` can be read but the pointer cannot be written: write the status change to `project.md` anyway, then surface a warning: "The project record was restored, but the index pointer couldn't be updated. The project may still appear as archived in listings until the pointer is repaired — re-run this task to retry."
 
 If `archived_date` or `archive_note` fields are absent from the `project.md` of an archived project (e.g., the project was manually edited or archived through a non-standard path): proceed with the unarchive normally. Set `status: active` and `last_updated`. Do not fail because expected archive fields are missing.
 

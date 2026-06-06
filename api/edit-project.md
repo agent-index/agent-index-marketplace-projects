@@ -1,14 +1,15 @@
 ---
 name: edit-project
 type: task
-version: 3.0.4
+version: 4.0.0
 collection: projects
-description: Edits an existing active project — updating brief, milestones, ownership, member list, roles, comms channel, or any other project fields.
+description: Edits an existing active project — brief, milestones, ownership, member list, roles, comms channel. Tier-resolved (4.0) — on org-public projects the roster is metadata; on PRIVATE projects membership IS the grant list (adding a member applies an owner-approved collaborator grant, Accept-gated and verified; the first member ends the project's invisibility).
 stateful: false
 produces_artifacts: false
 produces_shared_artifacts: false
 dependencies:
-  skills: []
+  skills:
+    - permission-change-helper
   tasks: []
 external_dependencies:
   - system: "Slack / Microsoft Teams / Discord (conditional)"
@@ -32,8 +33,8 @@ The member identifies which project to edit and describes what they want to chan
 
 ### Outputs
 
-- `{shared_projects_path}/{project-slug}/project.md` — updated in place
-- `{shared_projects_path}/projects-manifest.json` — updated if name, owner, or channel status changed
+- `{base}/project.md` — updated in place (base tier-resolved; private-tier membership changes also touch grants + the pointer)
+- `/shared/projects-index/{owner_hash}-{slug}.json` — overwritten if name, status, or (private tier) membership scope changed; created when a private project gains its first member
 
 ### Cadence & Triggers
 
@@ -45,15 +46,13 @@ On demand, whenever a project record needs to change.
 
 ### Step 1: Read Org Configuration and Identify Project
 
-Read `collection-setup-responses.md` via `aifs_read` to get `shared_projects_path`, `roles_config`, and all feature flags (`brief_enabled`, `brief_sections`, `milestones_enabled`, `comms_channel_enabled`, `comms_platform`, `comms_channel_naming_template`).
+Read `collection-setup-responses.md` via `aifs_read` for `roles_config` and all feature flags (`brief_enabled`, `brief_sections`, `milestones_enabled`, `comms_channel_enabled`, `comms_platform`, `comms_channel_naming_template`). Read local `member-index.json` for `member_hash` + `member_folder_id`.
 
-**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
+**Tier resolution (4.0):** resolve the named project via the pointer index `/shared/projects-index/` (org-public + shared-private projects) and the member's own private projects (`id:{member_folder_id}/projects/`). Tier → base path: org-public = `location.path`; private = `id:{folder_id}/` (from the pointer, or project.md frontmatter for invisible ones). `projects-manifest.json` is retired.
 
-If the member named a project in their invocation: use that name. Generate the slug and check whether `{shared_projects_path}/{slug}/project.md` exists (via `aifs_exists`).
+**Write authority is tier-mechanical:** org-public = any member (edits activity-attributed); private = owner and collaborators. **Membership changes on a PRIVATE project are owner-only** (they are Drive grants — see Step 3).
 
-If the member did not name a project: ask "Which project would you like to edit?"
-
-Read `projects-manifest.json` via `aifs_read`. If the member's input doesn't exactly match a known slug, find the closest match by name. If multiple close matches exist, present them and ask the member to confirm which one.
+If the member did not name a project: ask, listing what they can see (their own + pointers).
 
 If the identified project has `status: archived`:
 
@@ -125,8 +124,12 @@ Present the current milestones with their names, target dates, and statuses. Sup
 - If `org-suggested` or `project-defined`: present current roles. Accept additions, removals, or renaming. Enforce minimum of one role at all times.
 - If removing a role that is currently assigned to one or more members: warn "The role '{role}' is currently assigned to {N} member(s). Removing it will leave those members without a role. Would you like to reassign them before removing the role, or remove the role and leave those members unassigned?"
 
-**Member changes:**
-- *Add member:* Ask for a name and role. Role must be from current roles list. Resolve their identity against the members registry using the same process as owner changes: search by `display_name`, confirm if one match, disambiguate if multiple, note if unregistered.
+**Member changes (4.0 — the roster collapse, design decision 5):**
+
+- **On an ORG-PUBLIC project:** the roster is attribution/assignment metadata only — access is uniform for the whole org. Add/remove/change-role edits the roster in project.md, nothing else. No grants exist or are needed.
+- **On a PRIVATE project:** the roster IS the grant list. *Add member* = a `writer` (collaborator) grant on `id:{project_folder_id}` — ONE permission-change-helper spec, the **owner** Accepts, **HARD GATE** (outcome `applied` OR independent `aifs_get_permissions`), THEN the roster entry is written and the pointer scope updated (first-ever member → the pointer is CREATED now, ending the project's invisibility: title + owner become org-visible, data stays gated). *Remove member* = the symmetric `unshare` + roster + pointer mirror; removing the last member → pointer `scope` reverts toward owner-only (`"private"` object-form empty) — pointer is never deleted (title residue accepted). Unregistered people cannot be granted (Drive needs an account) — they may be roster-listed as unlinked, with a clear note that they have NO access until registered and re-added.
+
+- *Add member (both tiers):* Ask for a name and role. Role must be from current roles list. Resolve their identity against the members registry using the same process as owner changes: search by `display_name`, confirm if one match, disambiguate if multiple, note if unregistered.
 - *Remove member:* Ask which member to remove. Confirm before marking for removal.
 - *Change member role:* Ask which member and what their new role should be.
 - *Link unregistered member:* If a project has members recorded with `member_hash: null` (added before they joined the org), and the member is now in the registry, offer to link their full identity. Search the registry by display name, confirm the match, and update the entry with their `member_hash` and `email`.
@@ -161,7 +164,7 @@ On confirmation:
 
 2. Write the updated `project.md` with all changes applied. Update `last_updated` to today's date.
 
-3. If name, owner, or channel status changed: update the corresponding entry in `projects-manifest.json`. Update `last_updated` on the manifest.
+3. If name, owner, status, or (private tier) membership changed AND a pointer exists (org-public, or ever-shared private): overwrite the pointer at `/shared/projects-index/{owner_hash}-{slug}.json` to match. Membership scope changes are written ONLY after the grant hard gate passes (see Member changes above). Invisible private projects: no pointer, nothing to update.
 
 4. If comms channel operations are pending:
    - *Channel creation:* Use the platform's MCP connector to create the channel. Set topic/description. Invite all registered members. If the connector is unavailable, set `comms_channel.status: pending` and note: "Channel creation is pending — I can't reach {comms_platform} right now. Try again later."
@@ -170,7 +173,7 @@ On confirmation:
 
 5. Confirm to member:
    > "'{name}' has been updated."
-   > {if renamed}: "The project directory is now at `{shared_projects_path}/{new-slug}/`."
+   > {if renamed}: "The project directory is now at `{base}/{new-slug}/`."
    > {if channel created}: "Channel #{channel_name} has been created on {comms_platform}."
    > {if members invited}: "{N} new members have been invited to #{channel_name}."
 
@@ -196,7 +199,7 @@ When showing the project summary, include enabled features. If the project has a
 
 `project.md` is always written with complete YAML frontmatter. No field is ever omitted, even if unchanged. The `last_updated` field is always set to today's date on any write.
 
-`projects-manifest.json` is read, parsed, updated in memory, and serialized — never written as a string substitution.
+Pointer files are read, parsed, updated in memory, and serialized — never written as a string substitution; overwrite-only, never deleted.
 
 ### Constraints
 

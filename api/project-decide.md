@@ -1,7 +1,7 @@
 ---
 name: project-decide
 type: task
-version: 3.0.4
+version: 4.0.0
 collection: projects
 description: Records an official project decision with rationale, source ideas, and spawned action items. Decisions are the authoritative record of why the team is doing something.
 stateful: false
@@ -47,11 +47,11 @@ On demand, whenever a project direction is set, an approach is chosen, or a sign
 
 Read `collection-setup-responses.md` via `aifs_read` to get feature flags.
 
-**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
+**Tier resolution (4.0):** read local `member-index.json`; resolve the project via `/shared/projects-index/` or the member's own private projects → base path. Decisions are project-record material (design decision 4): they live under the project's `decisions/`, tier follows the project, NO per-item prompts; commons writes are attributed.
 
 If `activity_log_enabled` is `false`: surface "Decision recording requires activity logging to be enabled. Contact your org admin." Halt.
 
-Identify the project. Verify it's active (read project data via `aifs_read`).
+Identify the project. Verify it's active (read project data via `aifs_read` at the tier-resolved base).
 
 **On success:** Proceed to Step 2.
 

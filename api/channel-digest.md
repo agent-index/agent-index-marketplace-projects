@@ -1,7 +1,7 @@
 ---
 name: channel-digest
 type: task
-version: 3.0.4
+version: 4.0.0
 collection: projects
 description: Checks a project's communications channel for new messages, produces a digest summary, and extracts candidate action items and updates for human review.
 stateful: true
@@ -52,7 +52,7 @@ The cadence is a suggestion surfaced at session-start, not an automated schedule
 
 Read `collection-setup-responses.md` via `aifs_read` to get `channel_monitor_enabled`, `comms_platform`, `activity_log_enabled`, `action_items_enabled`.
 
-**Tool selection:** Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
+**Tier resolution (4.0):** read local `member-index.json`; resolve the project via `/shared/projects-index/` or the member's own private projects → base path. Digests are project-record material (design decision 4): written into the project's space, tier follows the project; commons writes attributed. External Slack/Teams reads are unchanged.
 
 If `channel_monitor_enabled` is `false`: halt with appropriate message.
 

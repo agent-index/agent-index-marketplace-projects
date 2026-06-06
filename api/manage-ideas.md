@@ -1,7 +1,7 @@
 ---
 name: manage-ideas
 type: task
-version: 3.0.4
+version: 4.0.0
 collection: projects
 description: View, edit, and manage ideas — add artifacts, create response ideas, add collaborators, and promote artifacts to the project with actionable assignments.
 stateful: false
@@ -44,7 +44,7 @@ On demand, whenever a member wants to work with project ideas.
 
 Read `collection-setup-responses.md` via `aifs_read` to get feature flags.
 
-**Tool selection:** Operations on the member's private workspace (`/members/{member_hash}/ideas/`) use native Read/Write tools. Operations on the shared projects path (`{shared_projects_path}`) use `aifs_*` tools (e.g., `aifs_read`, `aifs_write`, `aifs_exists`).
+**Tier resolution (4.0):** read local `member-index.json` for `member_hash` + `member_folder_id`. The member's private ideas live at `id:{member_folder_id}/ideas/{project-slug}/{idea-slug}/` (all `aifs_*`, anchor-addressed; legacy local-workspace ideas may still exist — offer the one-time move per share-idea's Edge Cases). Ideas shared WITH the member are discovered via `/shared/projects-index/` pointers (`type: idea`, caller in scope) and opened at `id:{location.folder_id}/`. Project-resident ideas live under each readable project's `ideas/`.
 
 If `ideas_enabled` is `false`: halt with appropriate message.
 
@@ -56,8 +56,9 @@ Determine what the member wants to do. If they specified in their invocation (e.
 
 Gather the member's ideas from two sources:
 
-1. **Private ideas:** Read from `/members/{member_hash}/ideas/` across all projects (or a specific project if the member narrowed scope).
-2. **Shared ideas they're involved in:** Read from each active project's `/ideas/` directory. Include ideas where the member is the author or a collaborator.
+1. **My private ideas:** `aifs_list("id:{member_folder_id}/ideas/")` (plus any legacy local ones).
+2. **Ideas shared with me:** pointer-index entries (`type: idea`) whose scope includes the member — opened by folder ID.
+3. **Project-resident ideas I can read:** each readable project's `/ideas/` directory (org-public projects + private projects the member belongs to). Never enumerate other members' spaces — invisible means invisible.
 
 Present a dashboard:
 
@@ -101,7 +102,7 @@ For each artifact being promoted:
 1. Ask: "Who is this for?" — resolve against the members registry.
 2. Ask: "What should they do with it? For example: 'Implement this design' or 'Review and sign off'." — this becomes the actionable assignment.
 3. Ask: "Is there a deadline?"
-4. Copy the artifact to `{shared_projects_path}/{project-slug}/artifacts/{today YYYY-MM-DD}/{artifact-filename}`.
+4. Copy the artifact to `{project base}/artifacts/{today YYYY-MM-DD}/{artifact-filename}` — it adopts the PROJECT's tier structurally (this is a deliberate widening when the idea was narrower: confirm with the standard widening warning; the promotion record provides the attribution).
 5. Record the promotion in the idea's `promoted_artifacts` array:
    ```yaml
    - artifact_name: "{filename}"

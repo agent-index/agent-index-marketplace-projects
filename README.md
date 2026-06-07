@@ -49,7 +49,7 @@ Each project gets its own directory:
   /artifacts/         ← agent-index generated outputs (pulse reports, etc.)
 ```
 
-A manifest at `/shared/projects/projects-manifest.json` provides a lightweight index of all projects and their status.
+Discovery (4.0): one pointer file per discoverable item at `/shared/projects-index/` — org-public projects always; private projects and ideas only once shared (invisible until then; they live in their owners' own My Drives). The 3.x `projects-manifest.json` is retired.
 
 ## Project Lifecycle
 
@@ -77,7 +77,7 @@ When enabled during collection setup, project creation can optionally create a d
 
 ## Version
 
-3.0.4
+4.0.0
 
 ## Version History
 

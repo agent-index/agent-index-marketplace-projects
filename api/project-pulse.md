@@ -1,7 +1,7 @@
 ---
 name: project-pulse
 type: task
-version: 4.0.0
+version: 4.1.0
 collection: projects
 description: Status report generation and conversational Q&A about a project. Synthesizes activity logs, action items, decisions, milestones, ideas, and the project brief into coherent views for stakeholders and managers.
 stateful: false
@@ -48,7 +48,7 @@ On demand, whenever a stakeholder or manager wants a project update. Can be run 
 
 Read `collection-setup-responses.md` via `aifs_read` to get feature flags, especially `project_pulse_enabled` and `project_pulse_report_sections`.
 
-**Tier resolution (4.0):** read local `member-index.json`; resolve the project via `/shared/projects-index/` or the member's own private projects → base path. Reads are tier-mechanical (the member sees only projects they can access). The generated report is project-record material (design decision 4): written to the project's `artifacts/` by default — it inherits the project's tier structurally, NO prompt. If the member explicitly asks to share the report beyond the project's audience, that is the widening-override flow (explicit warning + hygiene pointer; see update-project's artifact placement rule).
+**Tier resolution (4.0):** read local `member-index.json`; resolve the project via `/shared/projects-index/` or the member's own private projects → base path (org-public = commons path; a shared-private project lives on the owner's drive → open via the cross-drive anchor `id:{item_drive_id}:{folder_id}/` when the pointer carries `item_drive_id`, bare `id:{folder_id}/` fallback for pre-C.1.3 pointers and own-drive projects; C.1.3 `crossdriveread`, OneDrive parity, harmless on gdrive). Reads are tier-mechanical (the member sees only projects they can access). The generated report is project-record material (design decision 4): written to the project's `artifacts/` by default — it inherits the project's tier structurally, NO prompt. If the member explicitly asks to share the report beyond the project's audience, that is the widening-override flow (explicit warning + hygiene pointer; see update-project's artifact placement rule).
 
 If `project_pulse_enabled` is `false`: halt with appropriate message.
 

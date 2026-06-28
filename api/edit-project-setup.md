@@ -18,7 +18,8 @@ This setup takes about one minute. It connects your edit-project task to your or
 ## Pre-Setup Checks
 
 - `collection-setup-responses.md` is readable → if not: "The Projects collection hasn't been fully configured by your org admin yet. Contact them to complete collection setup before you can install this task."
-- `shared_projects_path` from collection setup exists and is readable → if not: check `aifs_auth_status()` and attempt automatic re-authentication if `authenticated: false`. If re-auth succeeds, retry. If not: "The shared projects directory doesn't appear to be accessible. I tried to restore your connection but wasn't able to. Try '@ai:member-bootstrap' to troubleshoot."
+- The commons `/shared/projects/` is readable → if not: auth-retry guidance, then '@ai:member-bootstrap'.
+- permission-change-helper binary present (private-tier membership grants) → if not: '@ai:update'.
 
 ---
 
@@ -26,8 +27,8 @@ This setup takes about one minute. It connects your edit-project task to your or
 
 ### Org-Mandated Parameters [org-mandated]
 
-**shared_projects_path** [org-mandated]
-- Description: The remote filesystem path where all project data is stored (accessed via `aifs_*` tools)
+**projects_default_visibility** [org-mandated]
+- Description: Which tier is pre-selected at project creation (org_public_first | ask | private_first); the commons is the fixed `/shared/projects/`; private projects live in members' own My Drives
 - Value source: injected from collection org-setup-responses
 - Member visibility: read-only
 

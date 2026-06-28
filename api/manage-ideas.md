@@ -1,7 +1,7 @@
 ---
 name: manage-ideas
 type: task
-version: 4.0.0
+version: 4.1.0
 collection: projects
 description: View, edit, and manage ideas — add artifacts, create response ideas, add collaborators, and promote artifacts to the project with actionable assignments.
 stateful: false
@@ -44,7 +44,7 @@ On demand, whenever a member wants to work with project ideas.
 
 Read `collection-setup-responses.md` via `aifs_read` to get feature flags.
 
-**Tier resolution (4.0):** read local `member-index.json` for `member_hash` + `member_folder_id`. The member's private ideas live at `id:{member_folder_id}/ideas/{project-slug}/{idea-slug}/` (all `aifs_*`, anchor-addressed; legacy local-workspace ideas may still exist — offer the one-time move per share-idea's Edge Cases). Ideas shared WITH the member are discovered via `/shared/projects-index/` pointers (`type: idea`, caller in scope) and opened at `id:{location.folder_id}/`. Project-resident ideas live under each readable project's `ideas/`.
+**Tier resolution (4.0):** read local `member-index.json` for `member_hash` + `member_folder_id`. The member's private ideas live at `id:{member_folder_id}/ideas/{project-slug}/{idea-slug}/` (all `aifs_*`, anchor-addressed; legacy local-workspace ideas may still exist — offer the one-time move per share-idea's Edge Cases). Ideas shared WITH the member are discovered via `/shared/projects-index/` pointers (`type: idea`, caller in scope) and opened at the cross-drive anchor `id:{location.item_drive_id}:{location.folder_id}/` when the pointer carries `item_drive_id` (a shared idea lives on the owner's drive — C.1.3 `crossdriveread`), falling back to the bare `id:{location.folder_id}/` only for older pointers that predate `item_drive_id`. A bare anchor for another member's idea resolves against *this* member's drive and 404s on OneDrive even when the grant exists; on gdrive the bare form already reaches shared items, so the qualified anchor is OneDrive parity and harmless there. Project-resident ideas live under each readable project's `ideas/`.
 
 If `ideas_enabled` is `false`: halt with appropriate message.
 
@@ -57,7 +57,7 @@ Determine what the member wants to do. If they specified in their invocation (e.
 Gather the member's ideas from two sources:
 
 1. **My private ideas:** `aifs_list("id:{member_folder_id}/ideas/")` (plus any legacy local ones).
-2. **Ideas shared with me:** pointer-index entries (`type: idea`) whose scope includes the member — opened by folder ID.
+2. **Ideas shared with me:** pointer-index entries (`type: idea`) whose scope includes the member — opened via the cross-drive anchor `id:{item_drive_id}:{folder_id}/` (bare `id:{folder_id}/` fallback for pre-C.1.3 pointers).
 3. **Project-resident ideas I can read:** each readable project's `/ideas/` directory (org-public projects + private projects the member belongs to). Never enumerate other members' spaces — invisible means invisible.
 
 Present a dashboard:

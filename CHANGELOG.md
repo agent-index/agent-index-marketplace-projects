@@ -6,6 +6,13 @@ Format: [MAJOR.MINOR.PATCH] — YYYY-MM-DD
 
 ---
 
+## [4.1.0] — 2026-06-28 — Release C.1.3: crossdriveread
+
+### Fixed
+- **`crossdriveread` — shared private projects/ideas are now openable cross-drive.** On OneDrive a bare `id:{folder_id}` anchor resolves against the reader's own drive and 404s for content held in the owner's personal drive. Pointer-writers (`share-idea`, `create-project`, `edit-project`) now capture the item's `drive_id` from `aifs_stat` and write `item_drive_id` into the discovery pointer; readers (`edit-project`, `update-project`, `project-pulse`, `manage-ideas`) open shared-with-me content via the cross-drive anchor `id:{item_drive_id}:{folder_id}/...` (bare-anchor fallback for older pointers). Requires onedrive adapter 2.3.0+; harmless on gdrive.
+
+---
+
 ## [4.0.0] — 2026-06-06 — two-tier access model (MAJOR, breaking)
 
 ### Requires Admin Attention (read BEFORE provisioning)

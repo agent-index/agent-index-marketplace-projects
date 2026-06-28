@@ -1,7 +1,7 @@
 ---
 name: update-project
 type: task
-version: 4.0.0
+version: 4.1.0
 collection: projects
 description: The primary input mechanism for project updates — share progress, report blockers, update action items, and log what's happening. Lightweight and conversational.
 stateful: false
@@ -43,7 +43,7 @@ On demand, whenever a member has something to report. Designed for frequent, lig
 
 Read `collection-setup-responses.md` via `aifs_read` to get `activity_log_enabled`, `action_items_enabled`. Read local `member-index.json` for `member_hash` + `member_folder_id`.
 
-**Tier resolution (4.0):** resolve the project via `/shared/projects-index/` or the member's own private projects → base path (org-public = commons path; private = `id:{folder_id}/`). Write authority is tier-mechanical (org-public = any member, activity-attributed; private = owner/collaborators). `projects-manifest.json` is retired.
+**Tier resolution (4.0):** resolve the project via `/shared/projects-index/` or the member's own private projects → base path (org-public = commons path; private = the cross-drive anchor `id:{item_drive_id}:{folder_id}/` when the pointer carries `item_drive_id` — a shared-private project lives on the owner's drive, C.1.3 `crossdriveread` — falling back to the bare `id:{folder_id}/` for older pointers and for the member's OWN private projects on their own drive; the qualified form is OneDrive parity and harmless on gdrive). Write authority is tier-mechanical (org-public = any member, activity-attributed; private = owner/collaborators). `projects-manifest.json` is retired.
 
 **Artifact placement rule (design decisions 3/6):** artifacts attached during an update default INTO the project's `artifacts/` (or the named idea's folder) — access inherits structurally, no prompt beyond confirm. Explicit overrides: widening (e.g., org-public artifact from a private project) requires the explicit warning + a hygiene pointer (`type: artifact`, owner, NO parent reference); narrowing relocates into the owner's space + grants via share-idea's grant procedure.
 

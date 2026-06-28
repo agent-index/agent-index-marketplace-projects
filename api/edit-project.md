@@ -1,7 +1,7 @@
 ---
 name: edit-project
 type: task
-version: 4.0.0
+version: 4.1.0
 collection: projects
 description: Edits an existing active project — brief, milestones, ownership, member list, roles, comms channel. Tier-resolved (4.0) — on org-public projects the roster is metadata; on PRIVATE projects membership IS the grant list (adding a member applies an owner-approved collaborator grant, Accept-gated and verified; the first member ends the project's invisibility).
 stateful: false
@@ -48,7 +48,7 @@ On demand, whenever a project record needs to change.
 
 Read `collection-setup-responses.md` via `aifs_read` for `roles_config` and all feature flags (`brief_enabled`, `brief_sections`, `milestones_enabled`, `comms_channel_enabled`, `comms_platform`, `comms_channel_naming_template`). Read local `member-index.json` for `member_hash` + `member_folder_id`.
 
-**Tier resolution (4.0):** resolve the named project via the pointer index `/shared/projects-index/` (org-public + shared-private projects) and the member's own private projects (`id:{member_folder_id}/projects/`). Tier → base path: org-public = `location.path`; private = `id:{folder_id}/` (from the pointer, or project.md frontmatter for invisible ones). `projects-manifest.json` is retired.
+**Tier resolution (4.0):** resolve the named project via the pointer index `/shared/projects-index/` (org-public + shared-private projects) and the member's own private projects (`id:{member_folder_id}/projects/`). Tier → base path: org-public = `location.path`; private = the cross-drive anchor `id:{item_drive_id}:{folder_id}/` when the pointer carries `item_drive_id` (a shared-private project lives on the owner's drive — C.1.3 `crossdriveread`), falling back to the bare `id:{folder_id}/` for older pointers and for the member's OWN private projects (own-drive, where the bare anchor resolves correctly). On gdrive the bare anchor already reaches shared items, so the qualified form is OneDrive parity and harmless there. `projects-manifest.json` is retired.
 
 **Write authority is tier-mechanical:** org-public = any member (edits activity-attributed); private = owner and collaborators. **Membership changes on a PRIVATE project are owner-only** (they are Drive grants — see Step 3).
 
@@ -127,7 +127,7 @@ Present the current milestones with their names, target dates, and statuses. Sup
 **Member changes (4.0 — the roster collapse, design decision 5):**
 
 - **On an ORG-PUBLIC project:** the roster is attribution/assignment metadata only — access is uniform for the whole org. Add/remove/change-role edits the roster in project.md, nothing else. No grants exist or are needed.
-- **On a PRIVATE project:** the roster IS the grant list. *Add member* = a `writer` (collaborator) grant on `id:{project_folder_id}` — ONE permission-change-helper spec, the **owner** Accepts, **HARD GATE** (outcome `applied` OR independent `aifs_get_permissions`), THEN the roster entry is written and the pointer scope updated (first-ever member → the pointer is CREATED now, ending the project's invisibility: title + owner become org-visible, data stays gated). *Remove member* = the symmetric `unshare` + roster + pointer mirror; removing the last member → pointer `scope` reverts toward owner-only (`"private"` object-form empty) — pointer is never deleted (title residue accepted). Unregistered people cannot be granted (Drive needs an account) — they may be roster-listed as unlinked, with a clear note that they have NO access until registered and re-added.
+- **On a PRIVATE project:** the roster IS the grant list. *Add member* = a `writer` (collaborator) grant on `id:{project_folder_id}` — ONE permission-change-helper spec, the **owner** Accepts, **HARD GATE** (outcome `applied` OR independent `aifs_get_permissions`), THEN the roster entry is written and the pointer scope updated (first-ever member → the pointer is CREATED now, ending the project's invisibility: title + owner become org-visible, data stays gated). The created/updated pointer's `location` carries **`item_drive_id`** alongside `folder_id` (from project.md frontmatter, written by create-project; if absent on a pre-C.1.3 project, `aifs_stat` the project folder once and record both its `id` and `drive_id`) so the grantee can open the private project cross-drive (C.1.3 `crossdriveread`) — a bare `id:{folder_id}` would 404 against the recipient's own drive. *Remove member* = the symmetric `unshare` + roster + pointer mirror; removing the last member → pointer `scope` reverts toward owner-only (`"private"` object-form empty) — pointer is never deleted (title residue accepted). Unregistered people cannot be granted (Drive needs an account) — they may be roster-listed as unlinked, with a clear note that they have NO access until registered and re-added.
 
 - *Add member (both tiers):* Ask for a name and role. Role must be from current roles list. Resolve their identity against the members registry using the same process as owner changes: search by `display_name`, confirm if one match, disambiguate if multiple, note if unregistered.
 - *Remove member:* Ask which member to remove. Confirm before marking for removal.

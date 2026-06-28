@@ -1,7 +1,7 @@
 ---
 name: share-idea
 type: task
-version: 4.0.0
+version: 4.1.0
 collection: projects
 description: Make a private idea visible — three distinct moves. Share with specific people (per-person Drive grants on the idea folder in the owner's My Drive; reader or collaborator); PROMOTE into the parent project (relocates the content and adopts the project's tier — the "ready for the team" move); or unshare (revoke grants, pointer goes revoked). Owner-only; all grants Accept-gated and verified. Replaces the 3.x copy-to-shared flow.
 stateful: false
@@ -51,11 +51,12 @@ Review-before-sharing as 3.x: show title/description/artifacts, offer edits to t
 
 ### Step 3A: Share with people
 
-1. `aifs_stat("id:{member_folder_id}/ideas/{project-slug}/{idea-slug}")` → `idea_folder_id` (record in idea.md frontmatter).
+1. `aifs_stat("id:{member_folder_id}/ideas/{project-slug}/{idea-slug}")` → record both `idea_folder_id` (the `id`) **and `item_drive_id` (the returned `drive_id`, adapter 2.3.0+)** in idea.md frontmatter. The idea lives on the owner's personal drive, so capturing `drive_id` is what lets a grantee open it cross-drive (C.1.3 `crossdriveread`).
 2. Collect people + levels (read | collaborate); resolve against members-registry; drop unresolvables with notice.
 3. ONE helper spec: `op: "share"` per grant on resource **`id:{idea_folder_id}`** (bare ID), role `reader`|`writer`. Owner Accepts. **HARD GATE:** outcome `"applied"` OR independent `aifs_get_permissions` confirming every grant (helper ≤0.4.0 race; 0.4.1 fixed; fallback retained).
 4. **Pointer-on-first-share** to `/shared/projects-index/{member_hash}-{project-slug}--{idea-slug}.json`:
-   `{"type":"idea","name":"{title}","slug":"{idea-slug}","parent":"{project-slug}","owner":…,"owner_hash":…,"status":"active","scope":{"readers":[…],"collaborators":[…]},"location":{"folder_id":"{idea_folder_id}"},"created":…,"last_updated":…,"owner_departed":false}`
+   `{"type":"idea","name":"{title}","slug":"{idea-slug}","parent":"{project-slug}","owner":…,"owner_hash":…,"status":"active","scope":{"readers":[…],"collaborators":[…]},"location":{"folder_id":"{idea_folder_id}","item_drive_id":"{item_drive_id}"},"created":…,"last_updated":…,"owner_departed":false}`
+   `item_drive_id` (from the Step 1 stat; C.1.3 `crossdriveread`) is what lets a grantee on OneDrive open the idea where it physically lives on the owner's drive — a bare `id:{idea_folder_id}` resolves against the *recipient's* drive and 404s.
    Subsequent shares overwrite `scope`. NEVER write the pointer before the gate passes.
 5. Activity: if the parent project is accessible to the owner and `activity_log_enabled`, append an `idea_shared` event naming the grantees (org-public project) — for a PRIVATE parent project, the event goes in the project only if the owner owns/can write it.
 6. Confirm: who can read, who can write, that the idea's title is now org-discoverable, and that promotion is the next step when it's team-ready.

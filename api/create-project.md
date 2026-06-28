@@ -1,7 +1,7 @@
 ---
 name: create-project
 type: task
-version: 4.0.0
+version: 4.1.0
 collection: projects
 description: Creates a new project — org-public by default (the org commons; every member can see and contribute) or private (the member's own My Drive, invisible until shared) — including ownership, brief, milestones, team members, roles, optional comms channel, and project tracking directories. Org-public projects get a discovery pointer; private ones don't until shared.
 stateful: false
@@ -387,8 +387,10 @@ On confirmation:
      hard-gated on verified grants.
 
    **Private-tier extra:** `aifs_stat("id:{member_folder_id}/projects/{slug}")` → record the
-   resolved `project_folder_id` in the project.md frontmatter (`folder_id: {id}`) — edit-project's
-   grant specs and future pointers need the bare ID.
+   resolved `project_folder_id` in the project.md frontmatter (`folder_id: {id}`) **and the returned
+   `drive_id` as `item_drive_id` (adapter 2.3.0+)** — edit-project's grant specs need the bare ID, and
+   the pointer it later writes carries `item_drive_id` so a grantee can open the private project
+   cross-drive (C.1.3 `crossdriveread`). Capturing it now avoids a re-stat at first-share time.
 
 5. If comms channel is enabled for this project: attempt to create the channel on the configured platform.
 

@@ -1,7 +1,7 @@
 ---
 name: create-idea
 type: task
-version: 4.0.0
+version: 4.2.0
 collection: projects
 description: Creates a new idea for a project — private by default and INVISIBLE (stored in the member's own My Drive; no org-visible record exists until shared or promoted via share-idea). The creation prompt also offers project-resident creation (the idea lives in the project and adopts its tier). Artifacts attached at creation inherit the idea's access structurally.
 stateful: false
@@ -185,7 +185,7 @@ If the member provides a stream-of-consciousness description, accept it as-is. D
 
 Never create an idea for an archived project.
 
-Never write a private idea anywhere other than the member's own `/members/{member_hash}/ideas/` directory.
+Never write a private idea anywhere other than the member's own remote member space, addressed by ID: `id:{member_folder_id}/ideas/{project-slug}/{idea-slug}/`. (Through 4.1 this constraint named `/members/{member_hash}/ideas/`, a path that reads as the deprecated remote member space and predates 4.0's move of private ideas into the owner's own drive.)
 
 Never create a project-resident idea in a project the member cannot write (private project, non-member) — suggest private creation + share-idea instead.
 
@@ -193,10 +193,10 @@ The idea slug must be unique within its target directory. Always check for colli
 
 ### Edge Cases
 
-If the member's private ideas directory for this project doesn't exist yet: create `/members/{member_hash}/ideas/{project-slug}/` on first use.
+If the member's private ideas directory for this project doesn't exist yet: create `id:{member_folder_id}/ideas/{project-slug}/` on first use.
 
-If the project's shared ideas directory doesn't exist yet: create `{shared_projects_path}/{project-slug}/ideas/` on first use.
+If the project's shared ideas directory doesn't exist yet: create `{project base}/ideas/` on first use, where `{project base}` is the tier-resolved base from Step 1 (org-public → `/shared/projects/{slug}/`; private → the owner's space). **Do not** build this path from `shared_projects_path` — that setup parameter was removed in 4.0 and substituting it yields a broken path.
 
-If the project's activity log directory doesn't exist yet (e.g., project predates tracking features): create `{shared_projects_path}/{project-slug}/activity/` and initialize an empty `activity-log.jsonl` on first use.
+If the project's activity log directory doesn't exist yet (e.g., project predates tracking features): create `{project base}/activity/` and initialize an empty `activity-log.jsonl` on first use — same tier-resolved base as above, not `shared_projects_path`.
 
 If the member provides a link but no label: use the URL domain as the label (e.g., "figma.com link").

@@ -58,6 +58,17 @@ is missing or empty, fields are simply absent and everything else works.
   **Deferred (decided, not forgotten)** section naming the cross-project query, dedicated write
   operations, task lookup by ID, and team-scoped filtering.
 
+### Fixed
+
+- **`create-idea` built paths from a setup parameter removed in 4.0.** Two edge cases substituted
+  `{shared_projects_path}` when creating a project's `ideas/` or `activity/` directory on first use.
+  That parameter was removed in 4.0 (the commons is the fixed `/shared/projects/`), so the
+  substitution yielded a broken path. Both now use the tier-resolved project base. Found by
+  preflight during the 4.2 release, not by a member report — it had shipped since 4.0.0.
+- **`create-idea` described private ideas as living at `/members/{member_hash}/ideas/`.** The leading
+  slash reads as the deprecated remote member space, and 4.0 moved private ideas into the owner's own
+  drive. The constraint and edge case now name `id:{member_folder_id}/ideas/...`.
+
 ### Notes
 
 - **Scope, stated plainly:** field and tag queries resolve **one project at a time**. There is no

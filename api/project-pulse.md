@@ -59,8 +59,11 @@ Identify the project. Read the full project context (via `aifs_read`):
 - `decisions/` — all decision files
 - `ideas/` — all shared ideas with their statuses
 - `state/current-state.md` — latest state summary
+- `action-item-fields.json` (4.2) — the org's action-item field definitions, so field values can be rendered with their labels and units and aggregated meaningfully. Absent, empty, or unparseable → render items exactly as 4.1 did, with no field sections and no warning noise in the report itself. A report is a stakeholder artifact; a config problem belongs in a note to the member, not in the document.
 
 This is a heavy read. Load everything needed before interacting with the member.
+
+**Field-aware rendering (4.2).** Wherever an action item is shown, show its org field values using each definition's `label`, and for `number` fields append the `unit` — "Size: 13 pts", never a bare `13`. Show `tags` where they exist. An item with no value for a field displays that field's **default**; nothing is written to the item to make that so.
 
 **On success:** Proceed to Step 2.
 
@@ -93,6 +96,13 @@ Structured overview:
 - Blocked: {count, what's blocking each, and who can unblock}
 - Open (not yet started): {count and titles}
 - Overdue: {count, how overdue, and owners}
+
+**Field breakdowns (4.2, only when the org has defined fields and items carry values):**
+- For each active `single-select` field: a count per option across open items — e.g. "Type: 9 item, 4 bug". This is what makes a bug list answerable at the project level.
+- For each active `number` field: a total across open items, and a total per assignee, rendered with the field's unit — "Size: 47 pts open; Sarah 21, Michau 14, unassigned 12". Sum only items that hold a value; do not treat an unset field as zero unless the field's default is zero, and say which you did if it matters to the number.
+- Tags in use across the project's items, with counts.
+
+Include a breakdown only when it carries information. A field where every item holds the same value, or no item holds any value, is noise — omit it rather than printing a row of zeros. Scope note: these are **per-project** figures. This task resolves one project, and 4.2 ships no cross-project rollup.
 
 **decisions_made:**
 List decisions recorded since the last report with their dates, deciders, and one-line summaries. Link to the full decision records.
@@ -131,6 +141,9 @@ Examples of questions Claude should handle well:
 - "Is the April 15th milestone at risk?" → Check the milestone, look at action items that feed into it, assess progress.
 - "What has Sarah been working on?" → Search action items, updates, and activity log for entries by or assigned to Sarah.
 - "What's left to do?" → Summarize open and in-progress action items, unresolved ideas, upcoming milestones.
+- "What bugs are open?" (4.2) → If the org defines a `single-select` field with a matching option, filter open items on it and report them. If the org defines no such field, say so plainly — "This org's action items don't have a type field defined, so bugs aren't distinguished here; your admin can add one" — rather than guessing from item titles.
+- "How much work is on Sarah's plate?" (4.2) → If a `number` field is defined, sum her open items and give the total with its unit alongside the item count. Without such a field, give the count and say the effort dimension isn't configured.
+- "What's tagged mobile?" (4.2) → Filter this project's items by tag.
 - "Give me the timeline of what's happened." → Walk through the activity log chronologically, narrating the project story.
 - "Why did we choose this approach for the database?" → Search decisions for database-related entries, present the rationale.
 
@@ -158,11 +171,25 @@ Never share information from one member's private ideas in a pulse response. Onl
 
 Status reports are snapshots, not living documents. Once written, they are not updated. The next report is a new file.
 
+Never write to `action-items.json` or `project.md`. Pulse is a read-and-synthesize task; rendering a field's default value is a display decision, not a data change. This matters specifically because 4.2 resolves unset fields at read time — the wrong instinct is to "fill in" defaults while you have the file open.
+
+Never aggregate a `number` field across projects. Pulse resolves a single project, and cross-project rollup is deliberately absent in 4.2; a figure that looks org-wide but is scoped to one project is worse than no figure.
+
+Never report a field breakdown for a field the org has deprecated unless items still hold values for it, and never offer a deprecated field as a filter.
+
 ### Edge Cases
 
 If the project has no activity log entries: the report will be sparse. Note: "This project doesn't have activity tracking data yet. The report is based on the project brief and milestones only."
 
 If the project has no action items: skip that section in the report. In conversational mode, note: "Action items aren't being tracked for this project."
+
+If the org has defined fields but no item holds a value for any of them: omit the field breakdowns entirely rather than printing empty rows. The fields are configured but unused, and a table of zeros implies data that isn't there.
+
+If an item holds a value for a key absent from the field config: render it with its raw key rather than dropping it, and do not include it in aggregates — a value with no definition has no unit, no label, and no defensible interpretation.
+
+If a `number` field holds a non-numeric value on some item (hand-edited, or written before validation existed): exclude that item from the sum, report the total, and name the item so it can be fixed. Never coerce it to zero silently, which would understate the total while looking authoritative.
+
+If the field config is unparseable: generate the report without field content and tell the member separately. The report artifact itself carries no error text — a stakeholder reading it later shouldn't see our configuration problems.
 
 If the status-reports directory doesn't exist: create `{project}/artifacts/status-reports/` on first use.
 

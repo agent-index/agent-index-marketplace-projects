@@ -6,6 +6,69 @@ Format: [MAJOR.MINOR.PATCH] — YYYY-MM-DD
 
 ---
 
+## [4.2.0] — 2026-07-27 — action-item identity and description
+
+### Requires Admin Attention (read BEFORE provisioning)
+
+Two new provisioned objects: **`/shared/prefix-registry/`** (a directory; members write their own
+prefix claims, so `collaborative-acls.json` gains an all-members writer grant) and
+**`action-item-fields.json`** (an empty scaffold at the org root, admin-writable). Re-run
+`@ai:install-collection projects` so Step 5.5 provisions both.
+
+**Nothing changes for your org until you act.** No field definitions ship — the config is an empty
+list, so members see no field prompts. Existing projects keep issuing `AI-` IDs and are not
+renamed, renumbered, or rewritten. If `/shared/prefix-registry/` is missing, the prefix flow halts
+with a provisioning message rather than issuing unreserved prefixes; if `action-item-fields.json`
+is missing or empty, fields are simply absent and everything else works.
+
+### Added
+
+- **Per-project action-item ID prefixes.** Action items are numbered `{PREFIX}-{NNN}` (`MOB-014`).
+  `create-project` derives a candidate from the project name, checks availability, and requires
+  explicit confirmation; the member may override. Prefixes are **unique across the org**, reserved
+  one-file-per-prefix in `/shared/prefix-registry/` via a claim protocol that writes and then
+  **reads back** to confirm ownership (check-then-write is not atomic where same-named siblings are
+  permitted). `AI` is reserved and unclaimable — it is the implicit prefix for every pre-4.2 project.
+  Rules: `action-item-prefix-rules.md`.
+- **Org-defined action-item fields.** Admins add, extend and deprecate fields at any time in
+  `action-item-fields.json` — types `string`, `number`, `single-select`, `date`. Values are stored
+  nested under `fields` on each item so an admin-chosen key can never collide with a built-in.
+  `manage-action-items` prompts and validates; `project-pulse` renders values with labels and units
+  and produces per-project breakdowns (counts per option, totals overall and per assignee).
+  Adding a field **never rewrites existing items** — a missing value resolves to the field's default
+  at read time. Guide: `action-item-fields-guide.md`.
+- **Tags on projects and action items.** Free-form, member-owned, normalized on write (lowercase,
+  hyphenated). Existing project tags are suggested when tagging an item. Project and item tags are
+  independent namespaces — no inheritance.
+- **`transition-project` keeps the registry consistent with tier.** Going public adds `project_slug`
+  to the registry entry and carries the prefix into the pointer; going private removes the slug and
+  **retains the claim**. A project that becomes discoverable without a prefix is offered one.
+
+### Changed
+
+- Discovery pointers carry `action_item_prefix` so availability checks are a cheap index scan.
+- `project.md` frontmatter gains `action_item_prefix`, `prefix_history`, and `tags`.
+- `edit-project` can set a prefix on a project that has none — which is how pre-4.2 projects adopt
+  one — and **refuses to change it once the project has issued any action item**, stating why.
+  Existing IDs are never renumbered.
+- README documents `transition-project`, which shipped in 4.0.0 but was never added to the
+  capability list, and no longer describes private ideas as living in the member's *local*
+  workspace (untrue since 4.0).
+- ROADMAP rewritten; it had stated "Current version: 3.0.6" since 2026-05-02. Now carries a
+  **Deferred (decided, not forgotten)** section naming the cross-project query, dedicated write
+  operations, task lookup by ID, and team-scoped filtering.
+
+### Notes
+
+- **Scope, stated plainly:** field and tag queries resolve **one project at a time**. There is no
+  org-wide rollup in 4.2 — "every open bug in the org" is not answerable yet, and needs the deferred
+  cross-project query capability.
+- The prefix lock is a one-way door by design. An ID leaves agent-index's control the moment it
+  appears in a branch name, pull request, or document; renaming a prefix would invalidate those
+  references and renumbering would invalidate the rest.
+
+---
+
 ## [4.1.0] — 2026-06-28 — Release C.1.3: crossdriveread
 
 ### Fixed

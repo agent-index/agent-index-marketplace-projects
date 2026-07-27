@@ -1,7 +1,7 @@
 ---
 name: edit-project
 type: task
-version: 4.1.0
+version: 4.2.0
 collection: projects
 description: Edits an existing active project — brief, milestones, ownership, member list, roles, comms channel. Tier-resolved (4.0) — on org-public projects the roster is metadata; on PRIVATE projects membership IS the grant list (adding a member applies an owner-approved collaborator grant, Accept-gated and verified; the first member ends the project's invisibility).
 stateful: false

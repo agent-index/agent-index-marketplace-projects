@@ -1,7 +1,7 @@
 ---
 name: transition-project
 type: task
-version: 4.0.0
+version: 4.2.0
 collection: projects
 description: Move a project between visibility tiers. Private → org-public copies the whole project (record, action items, decisions, ideas/, artifacts/, activity) into the org commons — the org gains custody; roster grants become moot. Org-public → private copies it into the owner's My Drive and leaves an archived stub in the commons (members can't delete /shared — and going private does not un-publish what the org already saw). Owner-only; the pointer is overwritten to match.
 stateful: false

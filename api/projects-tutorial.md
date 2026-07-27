@@ -1,7 +1,7 @@
 ---
 name: projects-tutorial
 type: skill
-version: 4.0.0
+version: 4.2.0
 collection: projects
 description: Explains the projects collection to members — projects (public by default), ideas (private and invisible by default), the structural artifact-inheritance rule, sharing, promotion, membership, custody, and lifecycle — through a guided tour or targeted answers.
 stateful: false

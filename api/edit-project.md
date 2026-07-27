@@ -81,6 +81,8 @@ Fields available to edit:
 - Roles list (subject to `roles_config`)
 - Members (add, remove, change role, link unregistered)
 - Comms channel (if `comms_channel_enabled`)
+- Action-item ID prefix (if `action_items_enabled` — **only while the project has issued no action items**; see Step 3)
+- Project tags
 
 Multiple changes in a single session are supported. Collect all changes before writing.
 
@@ -91,6 +93,33 @@ Multiple changes in a single session are supported. Collect all changes before w
 ### Step 3: Collect Changes
 
 Handle each type of change as follows:
+
+**Action-item ID prefix change (new in 4.2):**
+
+All rules live in `action-item-prefix-rules.md` at the collection root. Follow that file rather than restating it.
+
+First read `{base}/action-items.json` and check whether `items` is non-empty.
+
+*If the project has already issued action items* — **refuse the change** (rules §8):
+
+> *"I can't change the prefix now. This project has already issued {count} action item(s) starting at `{PREFIX}-001`, and those IDs are referenced outside agent-index — in branch names, Slack, documents. Renaming the prefix would make every one of those references wrong, and renumbering existing items isn't an option either. The prefix is locked to `{PREFIX}`."*
+
+This is a refusal **with the reason stated**, never a silent no-op and never a "are you sure?" that can be clicked through. If the member pushes back, explain that `prefix_history` exists precisely so old IDs keep resolving, but that splitting a project's ID space is a worse outcome than an imperfect prefix.
+
+*If the project has issued no action items* — the change is allowed:
+
+1. If the project currently has **no** prefix: derive a candidate (§3) and offer it. This is the path by which every project created before 4.2 adopts a prefix.
+2. Validate the member's choice (§4) and check availability (§5).
+3. **Claim the new prefix and confirm it by read-back before releasing the old one** (§8). A failure between the two must never leave the project holding no claim.
+4. Release the old claim only after the new one is confirmed. Leave `prefix_history` empty — nothing was ever issued under the old prefix, so there is nothing to resolve.
+
+*If the project has no prefix and the member declines one:* leave it `null`. The project continues to read as `AI` (§9). Do not re-prompt on every subsequent edit.
+
+**Project tags change (new in 4.2):**
+
+Add or remove free-form labels on the project. **Normalize on write** — lowercase, spaces to hyphens, consecutive hyphens collapsed, leading and trailing hyphens removed. Show the normalized form back to the member when it differs from what they typed, so the stored value is never a surprise.
+
+Project tags are not inherited by the project's action items; item tags are managed in `manage-action-items`.
 
 **Name change:**
 Ask for the new name. Generate the new slug. Check for collisions with existing projects (excluding the current project). Warn the member: "Changing the project name will also change its directory from `{old-slug}` to `{new-slug}`. Any links or references to the old path will need to be updated." Require explicit confirmation of the rename consequence before accepting.
@@ -162,9 +191,11 @@ On confirmation:
 
 1. If the project name changed: rename the project directory from `{old-slug}` to `{new-slug}`.
 
-2. Write the updated `project.md` with all changes applied. Update `last_updated` to today's date.
+1.5. **If the action-item prefix changed:** claim the new prefix and confirm it by read-back (`action-item-prefix-rules.md` §5), **then** release the old claim by deleting `/shared/prefix-registry/{OLD}.json`. Never the reverse order — a failure after releasing and before claiming leaves the project with no reservation, and another project can take the prefix it still has recorded. If the claim fails, abandon the prefix change and report it; apply the rest of the member's edits normally.
 
-3. If name, owner, status, or (private tier) membership changed AND a pointer exists (org-public, or ever-shared private): overwrite the pointer at `/shared/projects-index/{owner_hash}-{slug}.json` to match. Membership scope changes are written ONLY after the grant hard gate passes (see Member changes above). Invisible private projects: no pointer, nothing to update.
+2. Write the updated `project.md` with all changes applied. Update `last_updated` to today's date. If the prefix changed, write the new `action_item_prefix`; if tags changed, write the normalized `tags` list.
+
+3. If name, owner, status, **action-item prefix**, or (private tier) membership changed AND a pointer exists (org-public, or ever-shared private): overwrite the pointer at `/shared/projects-index/{owner_hash}-{slug}.json` to match. Membership scope changes are written ONLY after the grant hard gate passes (see Member changes above). Invisible private projects: no pointer, nothing to update.
 
 4. If comms channel operations are pending:
    - *Channel creation:* Use the platform's MCP connector to create the channel. Set topic/description. Invite all registered members. If the connector is unavailable, set `comms_channel.status: pending` and note: "Channel creation is pending — I can't reach {comms_platform} right now. Try again later."
@@ -201,11 +232,19 @@ When showing the project summary, include enabled features. If the project has a
 
 Pointer files are read, parsed, updated in memory, and serialized — never written as a string substitution; overwrite-only, never deleted.
 
+Prefix registry entries (`/shared/prefix-registry/{PREFIX}.json`) are a **different object with different rules** — they are not pointers. A registry entry is deleted in exactly one case: releasing a superseded prefix after the replacement claim is confirmed (`action-item-prefix-rules.md` §10). It is never deleted on archive, on transition, or on project deletion.
+
 ### Constraints
 
 Never edit an archived project. The archived check in Step 1 is mandatory.
 
 Never allow `status` to be changed via this task. Status transitions are handled exclusively by `archive-project` and `unarchive-project`.
+
+Never change the action-item prefix of a project that has issued at least one action item. Read `action-items.json` and check it — do not infer from `next_id`, and do not take the member's word for it. This check is mandatory, and the refusal states the reason.
+
+Never release an old prefix claim before the replacement claim is confirmed by read-back. Claim-then-release, never release-then-claim.
+
+Never renumber existing action items for any reason.
 
 Never allow the roles list to be emptied. Minimum one role must remain at all times.
 
@@ -218,6 +257,14 @@ For `org-mandated` roles configuration, roles edits are fully blocked. Do not pr
 Comms channel operations are always best-effort. A failure to create, archive, or invite must never block the project edit. Log the failure in the project record and note it to the member.
 
 ### Edge Cases
+
+If `action-items.json` is missing or unreadable when evaluating a prefix change: treat the project as **having issued items** and refuse the change. Failing closed is correct here — wrongly refusing costs the member a prefix they wanted, while wrongly allowing mints IDs that collide with items you couldn't see.
+
+If `action-items.json` exists with an empty `items` array but `next_id` is greater than 1: items were issued and later deleted, so those IDs may still be referenced externally. Refuse the change and say so — the empty array is not evidence that nothing was ever issued.
+
+If the new prefix is claimed successfully but the subsequent `project.md` write fails: the project now holds a claim it does not reference. Report it explicitly, keep the old prefix in the record, and note the orphaned claim so it can be cleaned up — do not silently release the new claim, because a retry will want it.
+
+If the project has no prefix and no pointer (invisible private project): the prefix can still be claimed. The registry entry omits `project_slug` and sets `"visibility": "private"` (rules §5) — the claim is global even though the project is not discoverable.
 
 If the member tries to set owner or PM to an empty value: surface "A project must have an owner. Who should be the owner?" Do not allow blank owner or PM fields.
 

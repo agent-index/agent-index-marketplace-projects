@@ -114,7 +114,28 @@ Duplicate check (4.0): consult the pointer index — `aifs_exists("/shared/proje
 
 **On conflict:** Surface: "A project named `{name}` already exists ({owner}, {tier}). Would you like to edit that project instead, or choose a different name?" Do not proceed until resolved.
 
-**On success:** Proceed to Step 3 with confirmed name and slug.
+**On success:** Proceed to Step 2.5 with confirmed name and slug.
+
+---
+
+### Step 2.5: Action-Item ID Prefix (new in 4.2)
+
+Action item IDs are `{PREFIX}-{NNN}`. The prefix belongs to this project, is unique across the org, and locks once the project issues its first item. **All derivation, validation, collision and claim rules live in `action-item-prefix-rules.md` at the collection root — follow that file; do not restate or reinvent the rules here.**
+
+If `action_items_enabled` is `false`: skip this step entirely.
+
+1. Derive the candidate from the project name (rules reference §3).
+2. Check availability — `aifs_exists("/shared/prefix-registry/{CANDIDATE}.json")`. If taken, resolve per §6 and re-check.
+3. Present the resolved candidate for **explicit acceptance** (§7):
+
+> *"Action items in this project will be numbered `{PREFIX}-001`, `{PREFIX}-002`, and so on. I suggest **{PREFIX}** based on the project name. Accept it, or give me a different one — 2 to 6 characters, uppercase, starting with a letter."*
+
+4. If the member supplies their own, validate it (§4) and check availability. On rejection, give the **specific** reason — "prefixes must be uppercase" rather than "invalid input".
+5. If the member declines to set one: record `null`. The project reads as `AI` (§9), exactly like every project created before 4.2.
+
+**No write happens in this step.** The prefix is only *reserved* by the claim in Step 9, so an abandoned interview never leaves an orphan claim in the registry. Because of that gap, the Step 9 claim can still lose a race — it is written to handle that (§5).
+
+**On success:** Proceed to Step 3 with the accepted prefix held in session state.
 
 ---
 
@@ -261,6 +282,18 @@ If the member skips: record `comms_channel_name: null` for this project.
 
 ---
 
+### Step 8.5: Project Tags (new in 4.2)
+
+Ask: "Any tags for this project? These are free-form labels for grouping and filtering — things like `mobile`, `q3`, `infra`. Skip if you'd rather not."
+
+Accept a comma-separated list or nothing. **Normalize every tag on write: lowercase, spaces to hyphens, consecutive hyphens collapsed, leading and trailing hyphens removed.** Normalization is not cosmetic — unnormalized tags produce `Mobile`, `mobile` and `mobile team` as three distinct values within days, and filtering degrades to guesswork.
+
+Project tags describe the project. They are **not** inherited by the project's action items (which carry their own tags), so nothing here needs to anticipate item-level use.
+
+**On success:** Proceed to Step 9.
+
+---
+
 ### Step 9: Confirm and Write
 
 Present a complete summary of everything collected:
@@ -268,6 +301,8 @@ Present a complete summary of everything collected:
 > **New Project Summary**
 > Name: {name}
 > Slug: {slug}
+> {if action_items_enabled}: Action-item IDs: {PREFIX}-001 onward {or "AI-001 onward (no prefix set)" if null}
+> {if tags collected}: Tags: {comma-separated normalized tags}
 > Owner: {owner display_name} {(email) if registered, or "(not in org registry)" if unregistered}
 > Project Manager: {pm display_name} {(email) if registered, or "(not in org registry)" if unregistered}
 > {if brief_enabled and any sections filled}: Brief: {list sections that have content}
@@ -297,6 +332,14 @@ On confirmation:
    { "last_updated": "{today}", "next_id": 1, "items": [] }
    ```
 
+1.5. **Claim the action-item prefix** (skip if none was set in Step 2.5). Follow the claim protocol in `action-item-prefix-rules.md` §5: `aifs_exists` → `aifs_write` the registry record → **read it back and confirm `owner_hash` is ours**. The read-back is the guard; the existence check alone is not atomic because the backend permits same-named siblings.
+
+   For a **private** project, omit `project_slug` from the registry record entirely and set `"visibility": "private"` (§5 hygiene — the registry is org-visible and must never name an invisible project).
+
+   If the read-back shows a different owner, another member claimed it between Step 2.5 and now. Take the next candidate (§6), tell the member what changed, and retry — bounded at 3 attempts, then ask them to choose.
+
+   **Nothing writes the prefix into `project.md` or the pointer until this claim is confirmed.** If no prefix was set, proceed with `action_item_prefix: null` — the project reads as `AI`.
+
 2. Write `project.md`. The full format:
 
    ```
@@ -305,6 +348,10 @@ On confirmation:
    slug: {slug}
    status: active
    visibility: {org_public | private}
+   action_item_prefix: {PREFIX, or null if none set}
+   prefix_history: []
+   tags:
+   {normalized tags as a YAML list — empty array if none}
    owner:
      display_name: {display_name}
      member_hash: {member_hash or null}
@@ -378,6 +425,7 @@ On confirmation:
        "type": "project", "name": "{name}", "slug": "{slug}",
        "owner": "{owner display_name}", "owner_hash": "{member_hash}",
        "status": "active", "scope": "org_public",
+       "action_item_prefix": "{PREFIX, or null if none set}",
        "location": {"path": "/shared/projects/{slug}/"},
        "created": "{today}", "last_updated": "{ISO}", "owner_departed": false
      }
@@ -449,7 +497,7 @@ Guide the member naturally through the interview. Not every member will know exa
 
 For the project brief, keep the tone light and conversational. Don't make it feel like filling out a form. If the member provides information for multiple sections in a single message, capture what they've given and only ask about the remaining sections.
 
-Steps 1–8 may be completed in any order if the member volunteers information out of sequence. If a member says "I want to create a project called Rebrand 2026, owned by Sarah Kim, with a Lead and Contributor role and a milestone for design review on April 15th," accept what was given and ask only for what is still missing.
+Steps 1–8.5 may be completed in any order if the member volunteers information out of sequence. The prefix question (Step 2.5) is the one exception in practice: it derives from the project name, so it needs the name settled first. If a member says "I want to create a project called Rebrand 2026, owned by Sarah Kim, with a Lead and Contributor role and a milestone for design review on April 15th," accept what was given and ask only for what is still missing.
 
 No step is a hard blocker. Even when the org admin has marked a feature as "required," the member can still skip it. The enforcement is conversational — Claude explains the org expectation, but always allows the member to proceed. The project record is always created. Skipped required items are noted in `current-state.md` as open items.
 
@@ -465,6 +513,12 @@ Never write to the filesystem before the Step 9 confirmation. All writes happen 
 
 Never generate a slug that collides with an existing project directory. The collision check in Step 2 is mandatory.
 
+Never write `action_item_prefix` into `project.md` or the discovery pointer before the registry claim has been confirmed by read-back (Step 9.1.5). A prefix recorded on a project but not held in the registry is worse than no prefix — a second project can claim it and the two will mint colliding IDs.
+
+Never claim the prefix `AI`. It is reserved as the implicit prefix for pre-4.2 and unprefixed projects (`action-item-prefix-rules.md` §2); claiming it would collide with existing IDs across the org.
+
+Never accept a prefix without explicit member confirmation, and never silently substitute a different one after a collision — say what changed and why.
+
 Never allow `archived` as a status on project creation. All new projects are `active`.
 
 Never allow the roles list to be empty for `org-mandated` or `org-suggested` configurations. If the member tries to remove all roles under `org-suggested`, surface: "Projects need at least one role. What would you like to keep?"
@@ -478,6 +532,14 @@ If the member provides a project name that generates a slug already in use but t
 If `/shared/projects-index/` does not exist or isn't writable (org-public creation): the install's provisioning is incomplete — "Ask your org admin to run `@ai:install-collection projects` (Step 5.5 provisioning)." Halt. If the member's `member_folder_id` is missing (private creation): Step 1's self-provisioning guidance.
 
 If the member provides a project name with only special characters that produce an empty slug after normalization: ask for a different name.
+
+If prefix derivation yields fewer than 2 valid characters, or a candidate starting with a digit (e.g. "Q1", "2026"): fall back to `PRJ` and resolve collisions from there (`action-item-prefix-rules.md` §3). Present it plainly — "I couldn't derive a good prefix from that name, so I've suggested `PRJ`; you'll probably want to pick something better."
+
+If `/shared/prefix-registry/` does not exist (org-public creation, `action_items_enabled` true): provisioning is incomplete — "Ask your org admin to run `@ai:install-collection projects` (Step 5.5 provisioning)." Halt rather than proceeding without a prefix: silently skipping reservation is how colliding prefixes get in.
+
+If three claim attempts all lose the race: stop retrying and ask the member to choose a prefix directly. A loop here means unusual contention, and the member choosing is faster than another round of derivation.
+
+If the member sets no prefix and later wants one: `edit-project` offers it, provided the project has not yet issued an action item (`action-item-prefix-rules.md` §8).
 
 If collection-setup-responses.md cannot be read: halt with "The Projects collection setup information couldn't be read. Try '@ai:setup' to check your installation, or contact your org admin."
 

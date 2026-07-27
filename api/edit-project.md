@@ -270,7 +270,7 @@ If the member tries to set owner or PM to an empty value: surface "A project mus
 
 If the member tries to add a member with a role that doesn't exist in the current roles list: surface the conflict and ask whether they want to add the new role first or choose from existing roles.
 
-If `projects-manifest.json` is missing or unparseable: proceed with writing `project.md` but surface a warning: "The projects manifest couldn't be updated — it may be missing or corrupted. Your project record was saved, but the manifest may be out of sync. Contact your org admin to repair the manifest."
+If the discovery pointer is missing or unparseable (`/shared/projects-index/{owner_hash}-{slug}.json`): proceed with writing `project.md` but surface a warning: "Your project record was saved, but its discovery entry couldn't be updated, so other members may see stale details until it's repaired." Recreate the pointer from the project record where possible — it is derived data, not a source of truth. (This edge case referenced `projects-manifest.json` until 4.2; that file was retired in 4.0.)
 
 If the member makes a change and then says "actually, never mind" before Step 4 confirmation: discard all collected changes and confirm: "No changes were made to '{name}'."
 

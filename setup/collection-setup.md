@@ -286,6 +286,16 @@ see share-idea for the three visibility moves.)*
 
 1. Write all collected parameter values to `collection-setup-responses.md`
 2. Ensure the discovery index `/shared/projects-index/` exists: check via `aifs_exists`; if missing, create it via `aifs_write '{"path":"/shared/projects-index/README.md","content":"Discovery index for projects and shared ideas. One pointer per discoverable item — content lives in the commons or in owners' member spaces. Managed by the projects collection; do not place project content here."}'`. This must exist before `install-collection` Step 5.5 applies the `collaborative-acls.json` grants. (4.0: `projects-manifest.json` is retired — on upgrades, `upgrade/3-to-4.md` overwrites it with a retired marker.)
+2a. **(4.2) Ensure the prefix registry `/shared/prefix-registry/` exists** — action item IDs are `{PREFIX}-{NNN}` and the registry is what makes a prefix unique across the org. Check via `aifs_exists`; if missing, create it via `aifs_write` of a `README.md` explaining that each file in it is one claimed prefix, that entries are never deleted (an archived project's IDs must still resolve), and that content belongs elsewhere. Like the discovery index, this must exist before `install-collection` Step 5.5 applies the `collaborative-acls.json` grants — members claim prefixes themselves, so they need write access.
+
+2b. **(4.2) Ensure `action-item-fields.json` exists as an empty scaffold.** Check via `aifs_exists`; if missing, write exactly:
+```json
+{ "schema_version": 1, "fields": [] }
+```
+**Ship no field definitions.** The field set belongs to the org, and seeding one org's taxonomy into every install is exactly what this avoids. An empty list means members see no field prompts and nothing about action items changes until an admin defines something — which is the intended post-upgrade experience. The file exists rather than being absent so the mechanism is discoverable and editable; both states behave identically at runtime.
+
+Do **not** interview the admin about fields during setup. Defining fields is an ongoing activity that tracks changing needs, not a one-time setup decision — point them at the admin documentation instead.
+
 3. Confirm to admin with a summary of everything configured:
 > "Projects collection is configured. Here's what was set:
 > - Project visibility default: {projects_default_visibility} (commons at /shared/projects/; private projects in members' own spaces, invisible until shared)
@@ -319,6 +329,7 @@ see share-idea for the three visibility moves.)*
 
 ### Requires Admin Attention (3.x → 4.0)
 - Run `upgrade/3-to-4.md`'s admin half (project inventory → pointer build; gated-idea review; manifest retirement) BEFORE `install-collection` Step 5.5 provisioning. See the CHANGELOG's Requires Admin Attention section.
+- **(4.2)** `/shared/prefix-registry/` and `action-item-fields.json` must exist before Step 5.5 applies the grants (Setup Completion 2a/2b). An org upgrading from 4.0/4.1 gets both provisioned on re-run; nothing about existing projects changes — they keep issuing `AI-` IDs until an owner sets a prefix, and no field prompts appear until an admin defines a field.
 - `channel_monitor_cadence` — preserved; safe to change at any time
 - `project_pulse_report_sections` — preserved; safe to change at any time
 

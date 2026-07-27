@@ -52,6 +52,16 @@ If `action_items_enabled` is `false`: halt with appropriate message.
 
 Read `{base}/action-items.json` via `aifs_read`.
 
+**Action-item ID prefix (4.2):** read `action_item_prefix` from the project's `project.md` frontmatter. If absent or `null`, the prefix is `AI` — resolved at read time, and **nothing is written to the project to record that fallback**. Full rules in `action-item-prefix-rules.md` at the collection root.
+
+**Org field config (4.2):** read `action-item-fields.json` **once here**, not inside any per-item loop. Three cases, all non-fatal:
+
+- **File absent** → no org fields are defined. Skip every field prompt. This is the expected state for an org that has upgraded but not configured anything.
+- **`fields` is an empty array** → identical behaviour to absent. This is the shipped default.
+- **File unparseable or a definition is malformed** → report it plainly ("Your org's action-item field config couldn't be read, so I'll skip those fields — worth telling your admin"), then continue with no fields. Never halt, and never write a partial item because a config was bad.
+
+Hold the active field definitions (those with `status: active`) in session state. Deprecated fields are **not** offered at creation but are still displayed wherever an existing item holds a value for them.
+
 **Assignment guard (private projects):** assigning an item to someone who is not on the roster (= has no grant) would create an item they can't see. Prompt: "{name} doesn't have access to this private project — add them as a member first (`@ai:edit-project`), assign to someone with access, or leave unassigned?" Never silently create unreachable assignments.
 
 **On success:** Proceed to Step 2.
@@ -87,8 +97,18 @@ Collect:
 - Due date (optional): "Is there a deadline?"
 - Dependencies (optional): "Is this blocked by or does it feed into any other items?" Present existing items for reference.
 - Source (optional): if created in context of another operation, auto-link the source.
+- **Org fields (4.2, only if any are active):** ask for each active field in config order. For a `single-select`, offer the `options` list and accept only a listed value — on a miss, restate the valid options rather than rejecting generically. For a `number`, accept a numeric value and echo it with the field's `unit` if one is defined. For a `date`, normalize to ISO `YYYY-MM-DD`. Every field is optional: "skip" leaves it unset, which reads as the field's default. Do not ask about deprecated fields.
+- **Tags (4.2, optional):** "Any tags? " and, when the project has tags of its own, offer them as suggestions: "This project uses `mobile`, `q3` — reuse any of those, or add your own." Suggesting existing values is what keeps a tag vocabulary from fragmenting. **Normalize on write:** lowercase, spaces to hyphens, consecutive hyphens collapsed, leading and trailing hyphens removed. Show the normalized form when it differs from what the member typed. Item tags are independent — the item does **not** inherit the project's tags.
 
-Write the item to action-items.json. Assign an auto-incrementing ID (format: `AI-{NNN}`). Log to activity log. Notify via channel if applicable.
+Write the item to action-items.json. **Assign the ID as `{PREFIX}-{NNN}`**, where `{PREFIX}` is the project's prefix resolved in Step 1 (`AI` when unset) and `{NNN}` is `next_id` zero-padded to three digits, exactly as before. Increment `next_id`. Store org field values nested under a `fields` object and tags under `tags`:
+
+```json
+{ "id": "MOB-014", "title": "...", "owner": "...", "status": "open",
+  "tags": ["mobile"],
+  "fields": { "type": "bug", "estimated_size": 5 } }
+```
+
+Field values are nested rather than flattened onto the item so that an admin-defined key can never collide with a built-in one (`id`, `status`, `owner`, `priority`, `blocked_by`) — a collision there would be silent and unrecoverable. Omit `fields` entirely when nothing was set; omit `tags` when there are none. Log to activity log. Notify via channel if applicable.
 
 **View items:**
 Support multiple views:
@@ -96,7 +116,8 @@ Support multiple views:
 - "All items" — full list, optionally filtered by status
 - "Blocked items" — items currently blocked, with what they're blocked by
 - "Overdue items" — items past due date
-- "Item {ID}" — detailed view of a single item including full update history
+- "Item {ID}" — detailed view of a single item including full update history, org field values (rendered with each field's label and, for numbers, its unit — "Size: 13 pts"), and tags
+- **Filter by field or tag (within this project):** e.g. "show bugs" where a `single-select` field has that value, or "show items tagged mobile". Cross-project filtering is deliberately out of scope in 4.2 — this task resolves one project at a time.
 
 **Update status:**
 Accept: `open` → `in_progress`, `in_progress` → `completed`, any → `blocked`, `blocked` → `in_progress`, any → `deferred`.
@@ -106,6 +127,13 @@ When marking `completed`: set `completed_date: {today}`. Append an update entry.
 After completing an item: check `feeds_into` for downstream items. For each downstream item that lists this item in its `blocked_by`: check if all blockers are now resolved. If so, update the downstream item's status to `open` (from `blocked`) and notify the owner: "{downstream title} is now unblocked — {owner name} can proceed."
 
 When marking `blocked`: ask "What's blocking this?" Record the blocker description in an update entry. If the blocker is another action item, add it to `blocked_by`.
+
+**Edit fields or tags (4.2):**
+
+Change an org field value or add/remove tags on an existing item. Validate exactly as at creation. Two rules worth stating because they are easy to get wrong:
+
+- An item that has **no value** for a field is not "empty" — it reads as that field's **default**. Setting it explicitly to the default is a no-op and should not be written.
+- A field deprecated after this item was created still shows its stored value and may be **cleared**, but is not offered as something to set.
 
 **Reassign:**
 Ask for the new owner. Resolve against members registry. Update the item. Add an update entry noting the reassignment. Log to activity log. Notify the new owner via channel if applicable.
@@ -157,6 +185,14 @@ Never modify the review queue without the member processing it. Candidates don't
 
 Action item IDs are permanent. Completed or deferred items retain their IDs. IDs are never reused.
 
+Never renumber an existing item, and never rewrite an item's ID because the project's prefix changed. Items keep the prefix they were issued under; `prefix_history` on the project exists so those IDs still resolve (`action-item-prefix-rules.md` §8).
+
+Never write to existing items in order to add a newly-defined field. A field added by an admin today applies to yesterday's items by **read-time default resolution**, not by migration. Rewriting every item to insert a default is a mass full-file write for zero information gain, and it is the operation class that has already destroyed action-item and activity-log files in this org.
+
+Never accept a `single-select` value outside the field's declared `options`, and never invent an option on the member's behalf. Extending the option list is an admin action on the config, not a side effect of item creation.
+
+Never halt because the field config is missing, empty, or malformed. Fields are additive; their absence must never block the core job of recording work.
+
 ### Edge Cases
 
 If action-items.json doesn't exist yet: initialize it:
@@ -169,6 +205,14 @@ If action-items.json doesn't exist yet: initialize it:
 ```
 
 If review-queue.json doesn't exist: there's nothing to process. Surface "No channel candidates to review."
+
+If an item holds a value for a field that is **no longer defined** in the config (the admin removed it outright instead of deprecating it): display it as an unrecognized field with its raw key and value rather than hiding it. Silently dropping data from view is worse than showing something ugly — and it tells the admin what deprecation would have preserved.
+
+If an item's stored `single-select` value is no longer in the field's `options` (the admin narrowed the list): display the stored value, flag it as no longer valid, and offer to change it to a current option. Never auto-correct it.
+
+If `next_id` disagrees with the highest existing item number: trust `next_id` and never reuse a number below it. A gap is harmless; a reused ID is a collision with something already referenced externally.
+
+If a project's prefix was changed while it had zero items and the member now creates the first item: it is issued under the current prefix. `prefix_history` stays empty because nothing was ever issued under the old one.
 
 If a member tries to complete an item they don't own: allow it but note "This item is owned by {owner name}. Marking it complete on their behalf." Log who actually marked it.
 

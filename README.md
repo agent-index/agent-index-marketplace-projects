@@ -10,17 +10,18 @@ Full project lifecycle management for agent-index. Create projects with structur
 - **edit-project** — Update any field of an active project, add members, create or archive channels
 - **archive-project** — Mark a project as no longer relevant (preserves all data, optionally archives the comms channel)
 - **unarchive-project** — Restore an archived project to active status
+- **transition-project** — Move a project between visibility tiers: private → org-public (the org gains custody) or org-public → private (copied to the owner's space; an archived stub remains in the commons)
 
 ### Ideas
 
-- **create-idea** — Capture a private idea in your local workspace for early-stage thinking
+- **create-idea** — Capture a private idea in your own member space for early-stage thinking — invisible to everyone until you share or promote it
 - **share-idea** — Promote a private idea to the project's shared space with collaborator assignments
 - **manage-ideas** — View, edit, and manage ideas across projects; promote approved artifacts to project scope
 
 ### Project Tracking
 
 - **update-project** — Record incremental project updates with activity log integration
-- **manage-action-items** — Track action items with dependencies, assignments, and status workflows
+- **manage-action-items** — Track action items with dependencies, assignments, and status workflows; issue project-prefixed IDs, set org-defined fields, and apply tags
 - **project-decide** — Record project decisions with rationale, context, and spawned action items
 
 ### Monitoring and Reporting
@@ -32,9 +33,19 @@ Full project lifecycle management for agent-index. Create projects with structur
 
 - **projects-tutorial** — Guided tour of the projects collection for new members
 
+## Action Item IDs, Fields, and Tags (4.2)
+
+**IDs are project-prefixed.** Action items are numbered `{PREFIX}-{NNN}` — `MOB-014`, `PAY-003`. The prefix is chosen when the project is created (suggested from the project name, confirmed or overridden by the creator) and is **unique across the org**, so an ID identifies one item anywhere it appears: a branch name, a Slack message, a pull request. It can be changed until the project issues its first action item, then it locks — by that point the ID is referenced outside agent-index and renaming it would invalidate those references. Projects created before 4.2 continue to use `AI-` and are unaffected; nothing was renamed or renumbered. Rules: [`action-item-prefix-rules.md`](action-item-prefix-rules.md).
+
+**Fields are defined by your org admin.** An admin can add, extend and deprecate action-item fields at any time — a type, an effort estimate, a compliance flag — in `action-item-fields.json`. Fields are shared by every project, so a value means the same thing everywhere. **The collection ships none**: after upgrading, nothing changes until an admin defines one. Adding a field never rewrites existing items — items without a value read as the field's default. Admin guide: [`action-item-fields-guide.md`](action-item-fields-guide.md).
+
+**Tags are free-form and belong to members.** Any member can tag a project or an action item, with no admin setup. Tags are normalized on write and existing project tags are suggested at item creation, so a shared vocabulary builds rather than fragmenting. Project tags and item tags are independent — no inheritance.
+
+**Scope, stated plainly:** field and tag queries resolve **one project at a time**. `project-pulse` reports a project's open bug count or total effort per assignee; there is no org-wide rollup across projects in 4.2.
+
 ## Project Data Location
 
-All project data is stored on the org's remote filesystem (accessed via `aifs_*` tools) at the path configured during collection setup (default: `/shared/projects/`). This is shared org-level data — not stored in individual member workspaces. Ideas start private in the member's local workspace and are promoted to shared space when shared.
+All project data is stored on the org's remote filesystem (accessed via `aifs_*` tools) at the path configured during collection setup (default: `/shared/projects/`). This is shared org-level data — not stored in individual member workspaces. Private projects and private ideas live in their owner's own member space on the remote filesystem (not the local workspace, which changed in 4.0) and are invisible to the org until shared or promoted.
 
 ## Project Structure
 

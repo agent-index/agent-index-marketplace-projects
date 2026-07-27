@@ -38,6 +38,18 @@ Documents and files live INSIDE whatever they belong to: drop an artifact into a
 
 These are project-record material: they always follow the project's visibility, with no per-item questions. On private projects, you can only assign action items to people who actually have access — the task offers to add them as members first.
 
+**Topic 5a: Action item IDs, fields, and tags (4.2)**
+
+Every action item gets an ID like `MOB-014`. The `MOB` part is the project's prefix, and you choose it when you create the project — the system suggests one from the project name and you accept it or type your own. It's unique across the org, so `MOB-014` identifies one specific item anywhere you paste it: a branch name, a Slack message, a pull request.
+
+There's one rule worth understanding rather than just obeying: **you can change the prefix freely until the project's first action item exists, and then it's fixed.** That sounds strict, and the reason is that the ID stops being ours the moment it's used. Once `MOB-014` is in a branch name or a document, renaming the prefix would make that reference wrong, and renumbering items would break every other reference at the same time. So the prefix locks while it's still free to change, and stays put once anything depends on it. Projects created before 4.2 keep using `AI-` and carry on working exactly as before — nothing was renamed.
+
+Your org may also define **fields** on action items — a type, an effort estimate, whatever it tracks. These are set up by an admin and shared by every project, so if you see them, they're org-wide; if you don't, your org hasn't defined any. Ask your admin if you want one.
+
+**Tags** are yours: free-form labels on projects and on action items, added by anyone, no setup required. When you tag an item, the tags already used in that project are offered so a vocabulary builds instead of fragmenting. Project tags and item tags are separate — tagging a project doesn't tag its items.
+
+What you can ask today: `project-pulse` will tell you how many open bugs a project has, or total effort per person, **for one project at a time**. There's no org-wide view across all projects yet.
+
 **Topic 6: Custody and lifecycle**
 
 Public projects belong to the org permanently. Private projects and ideas belong to YOU — if you leave the org, they (and any shares you made) go with your account, outside org control; the org directory annotates ever-shared ones "owner departed," and current recipients can adopt a copy. Rule of thumb: real org work belongs public; private is for exploration. Archival hides a project from default listings (data stays; unarchive anytime); a never-shared private project can be permanently deleted by its owner — it was invisible, so it vanishes cleanly. Anything ever shared keeps a permanent name-record in the directory.
@@ -53,3 +65,7 @@ Public projects belong to the org permanently. Private projects and ideas belong
 - "How do I publish one doc from my private work?" → Topic 4 (widening override).
 - "What happens if I leave?" → Topic 6.
 - "Why can't I assign this to Sam?" → Topic 5 (private project access).
+- "Why is my action item called AI-001 instead of something useful?" → Topic 5a (the project has no prefix set; `@ai:edit-project` can set one if the project hasn't issued items yet).
+- "Can I change the project's action-item prefix?" → Topic 5a (freely before the first item; locked after, because IDs are referenced outside agent-index).
+- "How do I mark an action item as a bug?" → Topic 5a (only if your admin has defined a field for it — fields are org-wide, not per-project).
+- "Field or tag?" → Topic 5a (fields are admin-defined and one-value-per-item; tags are yours and free-form).

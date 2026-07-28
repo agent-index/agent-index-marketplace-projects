@@ -58,7 +58,18 @@ Read `{base}/action-items.json` via `aifs_read`.
 
 - **File absent** → no org fields are defined. Skip every field prompt. This is the expected state for an org that has upgraded but not configured anything.
 - **`fields` is an empty array** → identical behaviour to absent. This is the shipped default.
-- **File unparseable or a definition is malformed** → report it plainly ("Your org's action-item field config couldn't be read, so I'll skip those fields — worth telling your admin"), then continue with no fields. Never halt, and never write a partial item because a config was bad.
+- **File unparseable** (invalid JSON) → report it plainly ("Your org's action-item field config couldn't be read, so I'll skip those fields — worth telling your admin"), then continue with no fields. Never halt, and never write a partial item because a config was bad.
+- **Individual definition invalid** → skip **that definition only**, and keep the valid ones. Discarding the whole config because one entry is wrong turns a typo in a field nobody uses into a silent loss of every field that works. Name the rejected key and the reason so the admin can fix it.
+
+Validate each definition on read, rejecting any that:
+  - has no `key`, or a `key` duplicating an earlier definition (first wins, later one rejected)
+  - has a `type` outside `string`, `number`, `single-select`, `date`
+  - is `single-select` with a missing or empty `options` array
+  - declares `options` on a type other than `single-select`, or `unit` on a type other than `number`
+  - has a `default` that is not among its own `options` (`single-select`) or is non-numeric (`number`)
+  - has a `status` other than `active` or `deprecated`
+
+These are the same constraints the admin guide states (`action-item-fields-guide.md`); validating them here is what makes the guide's promises true at runtime, since nothing validates the file at write time.
 
 Hold the active field definitions (those with `status: active`) in session state. Deprecated fields are **not** offered at creation but are still displayed wherever an existing item holds a value for them.
 
@@ -107,6 +118,8 @@ Write the item to action-items.json. **Assign the ID as `{PREFIX}-{NNN}`**, wher
   "tags": ["mobile"],
   "fields": { "type": "bug", "estimated_size": 5 } }
 ```
+
+A field whose `default` is `null` and which the member skipped is simply **unset**: display it as blank or omit it, never as the literal string "null". "Unset" and "set to nothing" are the same state here, and neither is a value.
 
 Field values are nested rather than flattened onto the item so that an admin-defined key can never collide with a built-in one (`id`, `status`, `owner`, `priority`, `blocked_by`) — a collision there would be silent and unrecoverable. Omit `fields` entirely when nothing was set; omit `tags` when there are none. Log to activity log. Notify via channel if applicable.
 

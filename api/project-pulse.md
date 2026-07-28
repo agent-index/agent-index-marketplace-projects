@@ -63,7 +63,7 @@ Identify the project. Read the full project context (via `aifs_read`):
 
 This is a heavy read. Load everything needed before interacting with the member.
 
-**Field-aware rendering (4.2).** Wherever an action item is shown, show its org field values using each definition's `label`, and for `number` fields append the `unit` — "Size: 13 pts", never a bare `13`. Show `tags` where they exist. An item with no value for a field displays that field's **default**; nothing is written to the item to make that so.
+**Field-aware rendering (4.2).** Wherever an action item is shown, show its org field values using each definition's `label`, and for `number` fields append the `unit` — "Size: 13 pts", never a bare `13`. Show `tags` where they exist. An item with no value for a field displays that field's **default**; nothing is written to the item to make that so. If the default is `null`, the field renders as blank or is omitted — never as the literal "null", and never as `0` for a number, which would be a fabricated figure in a stakeholder document.
 
 **On success:** Proceed to Step 2.
 

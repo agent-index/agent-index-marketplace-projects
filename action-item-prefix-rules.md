@@ -19,12 +19,24 @@ Deterministic, so the same name always suggests the same prefix:
 1. Split the project name on whitespace and hyphens.
 2. Drop stop-words: `a an the of for and to in on at by with`. If nothing remains, keep the original words.
 3. Strip characters outside `A-Za-z0-9` from each remaining word.
-4. **Two or more words remain:** take the first character of each of the first four words.
-5. **One word remains:** take its first three characters.
-6. Uppercase the result.
-7. If the result is shorter than 2 characters, or does not begin with a letter, use `PRJ`.
+4. **Drop any word that does not begin with a letter.** If nothing remains, keep the words from step 3. (Without this step a name like "2026 Planning" derives `2P`, which fails validation and falls all the way through to `PRJ` — discarding the perfectly good word next to the year.)
+5. **Two or more words remain:** take the first character of each of the first four words.
+6. **One word remains:** take its first three characters — or fewer if the word is shorter.
+7. Uppercase the result.
+8. If the result is shorter than 2 characters, or does not begin with a letter, use `PRJ`.
 
-Examples: "Mobile App Redesign" → `MAR`; "Payments" → `PAY`; "The Library of Congress Import" → `LCI`; "2026 Planning" → `PLA`; "Q1" → `PRJ`.
+Worked examples — each traceable through the steps above:
+
+| Project name | Steps | Candidate |
+|---|---|---|
+| Mobile App Redesign | 3 words, all letter-initial → `M`+`A`+`R` | `MAR` |
+| Payments | 1 word → first three characters | `PAY` |
+| The Library of Congress Import | drop `the`, `of` → `L`+`C`+`I` | `LCI` |
+| 2026 Planning | drop `2026` (step 4) → 1 word → first three | `PLA` |
+| Q1 | 1 word, letter-initial, 2 characters — valid as-is | `Q1` |
+| 2026 | drop `2026` → nothing left → keep it → `202` begins with a digit | `PRJ` |
+
+**These examples are normative.** They were corrected on 2026-07-27 after a rehearsal walkthrough found two of them ("2026 Planning" and "Q1") contradicting the algorithm they were meant to illustrate — the algorithm produced `PRJ` for both. An implementation that disagrees with this table is wrong, and a change to the algorithm must re-derive every row.
 
 ## 4. Validation (derived or member-supplied)
 
@@ -67,7 +79,11 @@ The suggested prefix is **always presented for explicit acceptance**, and the me
 ## 8. Immutability
 
 - **Before the project's first action item:** the prefix may be changed freely. Claim the new prefix and confirm it **before** releasing the old one, so the project is never left with no claim.
-- **After the first action item exists** (`action-items.json` has a non-empty `items` array): the prefix is locked. Refuse the change and explain that IDs are already in circulation. This is a refusal with a reason, never a silent no-op.
+- **After the first action item exists:** the prefix is locked. Refuse the change and explain that IDs are already in circulation. This is a refusal with a reason, never a silent no-op.
+
+  "Has issued an item" means **either** a non-empty `items` array **or** `next_id` greater than 1. The second clause matters: items can be deferred out of the list or removed by hand, and an empty `items` array with `next_id` at 4 means three IDs were issued and may still be referenced outside agent-index. Checking only the array would unlock a project whose IDs are already in the world.
+
+  If `action-items.json` cannot be read at all, **fail closed** — treat the project as having issued items and refuse. Wrongly refusing costs a member a prefix they wanted; wrongly allowing mints IDs that collide with items nobody could see.
 - **Existing IDs are never renumbered**, under any circumstance.
 - `prefix_history` on the project record retains superseded prefixes so previously issued IDs still resolve. Consumers must therefore resolve a prefix to a project by lookup, never by assuming a pattern-derived mapping is permanent — even though a project has exactly one *active* prefix at any moment.
 

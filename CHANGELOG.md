@@ -26,9 +26,12 @@ is missing or empty, fields are simply absent and everything else works.
 - **Per-project action-item ID prefixes.** Action items are numbered `{PREFIX}-{NNN}` (`MOB-014`).
   `create-project` derives a candidate from the project name, checks availability, and requires
   explicit confirmation; the member may override. Prefixes are **unique across the org**, reserved
-  one-file-per-prefix in `/shared/prefix-registry/` via a claim protocol that writes and then
-  **reads back** to confirm ownership (check-then-write is not atomic where same-named siblings are
-  permitted). `AI` is reserved and unclaimable — it is the implicit prefix for every pre-4.2 project.
+  one-file-per-prefix in `/shared/prefix-registry/` via a two-write claim protocol: write the record,
+  then write it again passing `if_revision`. The guarded second write is what establishes the claim —
+  a same-path write overwrites rather than creating a sibling, so without it a losing claimant would
+  silently destroy the winner's record and both projects would mint colliding IDs. Interleaving two
+  claimants elects exactly one winner, and the loser is told rather than discovering the collision
+  later. `AI` is reserved and unclaimable — it is the implicit prefix for every pre-4.2 project.
   Rules: `action-item-prefix-rules.md`.
 - **Org-defined action-item fields.** Admins add, extend and deprecate fields at any time in
   `action-item-fields.json` — types `string`, `number`, `single-select`, `date`. Values are stored

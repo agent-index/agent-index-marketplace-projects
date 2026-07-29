@@ -242,7 +242,7 @@ Never allow `status` to be changed via this task. Status transitions are handled
 
 Never change the action-item prefix of a project that has issued at least one action item. Read `action-items.json` and check it — do not infer from `next_id`, and do not take the member's word for it. This check is mandatory, and the refusal states the reason.
 
-Never release an old prefix claim before the replacement claim is confirmed by read-back. Claim-then-release, never release-then-claim.
+Never release an old prefix claim before the replacement claim's guarded `if_revision` write has succeeded. Claim-then-release, never release-then-claim.
 
 Never renumber existing action items for any reason.
 

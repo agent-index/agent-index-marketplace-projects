@@ -513,7 +513,7 @@ Never write to the filesystem before the Step 9 confirmation. All writes happen 
 
 Never generate a slug that collides with an existing project directory. The collision check in Step 2 is mandatory.
 
-Never write `action_item_prefix` into `project.md` or the discovery pointer before the registry claim has been confirmed by read-back (Step 9.1.5). A prefix recorded on a project but not held in the registry is worse than no prefix — a second project can claim it and the two will mint colliding IDs.
+Never write `action_item_prefix` into `project.md` or the discovery pointer before the guarded `if_revision` write has succeeded (Step 9.1.5). A prefix recorded on a project but not held in the registry is worse than no prefix — a second project can claim it and the two will mint colliding IDs.
 
 Never claim the prefix `AI`. It is reserved as the implicit prefix for pre-4.2 and unprefixed projects (`action-item-prefix-rules.md` §2); claiming it would collide with existing IDs across the org.
 

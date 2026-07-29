@@ -1,7 +1,7 @@
 # Projects Collection — Roadmap
 
 Current version: 4.2.0
-Last updated: 2026-07-27
+Last updated: 2026-07-28
 
 ---
 

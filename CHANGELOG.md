@@ -6,7 +6,7 @@ Format: [MAJOR.MINOR.PATCH] — YYYY-MM-DD
 
 ---
 
-## [4.2.0] — 2026-07-27 — action-item identity and description
+## [4.2.0] — 2026-07-28 — action-item identity and description
 
 ### Requires Admin Attention (read BEFORE provisioning)
 

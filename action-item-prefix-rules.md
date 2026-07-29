@@ -82,7 +82,7 @@ Phase P tested this against the live backend rather than reasoning about it, and
 
 **Private-project hygiene:** when the project is private, `project_slug` is **omitted entirely** — not blanked, not obfuscated. The registry is org-visible, and 4.0's pointer-hygiene principle holds that an org-visible record must never name or imply an invisible project. `visibility` is `private`.
 
-**Claim before writing the project record.** Never write `action_item_prefix` into `project.md` or a pointer until the claim has been confirmed by read-back.
+**Claim before writing the project record.** Never write `action_item_prefix` into `project.md` or a pointer until the guarded `if_revision` write in step 3 has succeeded.
 
 ## 6. Collision resolution
 

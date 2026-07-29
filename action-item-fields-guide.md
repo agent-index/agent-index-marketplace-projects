@@ -77,6 +77,19 @@ There is no rename. A `key` is how existing values are stored, so changing it or
 
 To effectively rename: define a new field with the new key, deprecate the old one, and let members move values across as they touch items. If you only want different wording, change the `label` — that is what it is for.
 
+## What gets rejected
+
+A definition that breaks any of these is **skipped at read time** — that definition only, not the whole file, so one bad entry cannot take your working fields down with it. The rejected key and reason are reported to whoever hit it, so it surfaces rather than failing silently.
+
+- No `key`, or a `key` that duplicates an earlier definition (the first one wins)
+- A `type` outside `string`, `number`, `single-select`, `date`
+- `single-select` with a missing or empty `options` array
+- `options` on any type other than `single-select`, or `unit` on any type other than `number`
+- A `default` that is not one of the field's own `options` (`single-select`), or that is not numeric (`number`)
+- A `status` other than `active` or `deprecated`
+
+Nothing validates this file when you save it — there is no schema check at write time. These rules are enforced when a capability reads the config, which is why they are listed here rather than left implicit.
+
 ## Should it be a field or a tag?
 
 Both were added in 4.2 and they solve different problems.

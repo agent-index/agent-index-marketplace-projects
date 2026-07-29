@@ -332,11 +332,11 @@ On confirmation:
    { "last_updated": "{today}", "next_id": 1, "items": [] }
    ```
 
-1.5. **Claim the action-item prefix** (skip if none was set in Step 2.5). Follow the claim protocol in `action-item-prefix-rules.md` §5: `aifs_exists` → `aifs_write` the registry record → **read it back and confirm `owner_hash` is ours**. The read-back is the guard; the existence check alone is not atomic because the backend permits same-named siblings.
+1.5. **Claim the action-item prefix** (skip if none was set in Step 2.5). Follow the claim protocol in `action-item-prefix-rules.md` §5 exactly: `aifs_exists` → `aifs_write` the record and keep the returned `revision` → **write the identical record again with `if_revision` set to that revision**. The second guarded write is what establishes the claim: a same-path write *overwrites* rather than creating a sibling, so without it a competing claimant silently destroys your record and both projects mint colliding IDs. `REVISION_CONFLICT` on the guarded write means you lost the race.
 
    For a **private** project, omit `project_slug` from the registry record entirely and set `"visibility": "private"` (§5 hygiene — the registry is org-visible and must never name an invisible project).
 
-   If the read-back shows a different owner, another member claimed it between Step 2.5 and now. Take the next candidate (§6), tell the member what changed, and retry — bounded at 3 attempts, then ask them to choose.
+   If the guarded write returns `REVISION_CONFLICT`, another member claimed it between Step 2.5 and now. Take the next candidate (§6), tell the member what changed, and retry — bounded at 3 attempts, then ask them to choose. Never proceed on a lost claim: a prefix recorded on a project but held by someone else in the registry is the one state this whole protocol exists to prevent.
 
    **Nothing writes the prefix into `project.md` or the pointer until this claim is confirmed.** If no prefix was set, proceed with `action_item_prefix: null` — the project reads as `AI`.
 

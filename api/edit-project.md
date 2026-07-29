@@ -110,7 +110,7 @@ This is a refusal **with the reason stated**, never a silent no-op and never a "
 
 1. If the project currently has **no** prefix: derive a candidate (§3) and offer it. This is the path by which every project created before 4.2 adopts a prefix.
 2. Validate the member's choice (§4) and check availability (§5).
-3. **Claim the new prefix and confirm it by read-back before releasing the old one** (§8). A failure between the two must never leave the project holding no claim.
+3. **Claim the new prefix using the full two-write protocol (§5) and confirm it succeeded before releasing the old one** (§8) — `aifs_write`, keep the revision, then the guarded `if_revision` write. A read-back alone is not sufficient and a failure between claim and release must never leave the project holding no claim.
 4. Release the old claim only after the new one is confirmed. Leave `prefix_history` empty — nothing was ever issued under the old prefix, so there is nothing to resolve.
 
 *If the project has no prefix and the member declines one:* leave it `null`. The project continues to read as `AI` (§9). Do not re-prompt on every subsequent edit.
@@ -191,7 +191,7 @@ On confirmation:
 
 1. If the project name changed: rename the project directory from `{old-slug}` to `{new-slug}`.
 
-1.5. **If the action-item prefix changed:** claim the new prefix and confirm it by read-back (`action-item-prefix-rules.md` §5), **then** release the old claim by deleting `/shared/prefix-registry/{OLD}.json`. Never the reverse order — a failure after releasing and before claiming leaves the project with no reservation, and another project can take the prefix it still has recorded. If the claim fails, abandon the prefix change and report it; apply the rest of the member's edits normally.
+1.5. **If the action-item prefix changed:** claim the new prefix via the two-write protocol (`action-item-prefix-rules.md` §5 — write, then guarded `if_revision` write), **then** release the old claim by deleting `/shared/prefix-registry/{OLD}.json`. Never the reverse order — a failure after releasing and before claiming leaves the project with no reservation, and another project can take the prefix it still has recorded. If the claim fails, abandon the prefix change and report it; apply the rest of the member's edits normally.
 
 2. Write the updated `project.md` with all changes applied. Update `last_updated` to today's date. If the prefix changed, write the new `action_item_prefix`; if tags changed, write the normalized `tags` list.
 

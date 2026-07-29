@@ -52,17 +52,33 @@ The registry is `/shared/prefix-registry/{PREFIX}.json` — **one file per prefi
 
 **Availability check (no write):** `aifs_exists("/shared/prefix-registry/{PREFIX}.json")`.
 
-**Claim protocol (the write):**
+**Claim protocol (the write).** Corrected 2026-07-27 after Phase P measured the backend's actual behaviour — the earlier version of this section was based on a wrong assumption and had a hole in it. See the note below.
 
 1. `aifs_exists` — if present, the prefix is taken; resolve per §6 and retry.
-2. `aifs_write` the record:
+2. `aifs_write` the record. **Keep the `revision` it returns.**
    ```json
    { "prefix": "MOB", "owner_hash": "{member_hash}",
      "claimed": "{ISO 8601}", "visibility": "org_public",
      "project_slug": "{slug}" }
    ```
-3. **Read it back and confirm `owner_hash` is ours.** This is the guard, not the `exists` check: the backend permits same-named siblings, so check-then-write is not atomic. If the read-back shows another owner, another member won the race — take the next candidate and retry.
+3. **Write the identical record a second time, passing `if_revision` set to the revision from step 2.**
+   - **Succeeds** → nobody wrote to that path between your two writes. The claim is yours. Keep the new revision.
+   - **`REVISION_CONFLICT`** → another member's claim landed in between and yours has been overwritten. You have lost the race. Take the next candidate (§6), tell the member what changed, and retry.
 4. Bounded at **3 attempts**. After that, ask the member to choose a prefix directly rather than looping.
+
+### Why the second, guarded write is necessary
+
+Phase P tested this against the live backend rather than reasoning about it, and two assumptions turned out to be wrong.
+
+**Writing the same path twice does not create a sibling — it overwrites, and the later writer wins.** A losing claimant does not leave a harmless duplicate behind; it *silently destroys* the winner's claim and then believes the prefix is its own. Both projects end up recording the same prefix, and both mint colliding IDs.
+
+**A read-back alone does not catch this.** Read-back only proves the record was yours *at the moment you read it*. If a competitor writes immediately afterwards, you have already moved on and will never notice. The window is small but the consequence — two projects issuing `MOB-001` — is unrecoverable, because neither can be renumbered.
+
+**There is no atomic create-if-absent.** `if_revision` is a genuine optimistic-concurrency guard (a stale revision is rejected with `REVISION_CONFLICT`, verified), but it does not express "create only if absent": writing to a path that does not exist succeeds even with a bogus `if_revision`. So the primitive that would make claiming a single atomic step does not exist, and the protocol has to be built from the primitives that do. That gap is worth closing at the adapter level — see the `safe-write-operations` idea.
+
+**The two-write sequence elects exactly one winner**, which is why it is the protocol. Verified by interleaving two claimants A and B as `A, B, A', B'`: A's guarded write is rejected because B changed the revision underneath it, and B's succeeds. Whoever wrote last is the only one whose guarded write can succeed, so at most one claimant ever concludes it holds the prefix — and the loser is *told*, rather than finding out when IDs collide.
+
+**Residual window.** A competitor can still overwrite the record between your successful guarded write and the moment the prefix is persisted to `project.md`. This is seconds wide and cheap to recover from, because no action items exist yet and the prefix is still freely changeable (§8). It must nonetheless be *detectable*: validation tooling compares every project's recorded `action_item_prefix` against the registry's `owner_hash` for that prefix, and a mismatch is a real finding rather than a theoretical one.
 
 **Private-project hygiene:** when the project is private, `project_slug` is **omitted entirely** — not blanked, not obfuscated. The registry is org-visible, and 4.0's pointer-hygiene principle holds that an org-visible record must never name or imply an invisible project. `visibility` is `private`.
 

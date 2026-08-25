@@ -533,7 +533,7 @@ If `/shared/projects-index/` does not exist or isn't writable (org-public creati
 
 If the member provides a project name with only special characters that produce an empty slug after normalization: ask for a different name.
 
-If prefix derivation yields fewer than 2 valid characters, or a candidate starting with a digit (e.g. "Q1", "2026"): fall back to `PRJ` and resolve collisions from there (`action-item-prefix-rules.md` §3). Present it plainly — "I couldn't derive a good prefix from that name, so I've suggested `PRJ`; you'll probably want to pick something better."
+If derivation cannot produce a valid candidate from the project name, it yields `PRJ` — see the worked-examples table in `action-item-prefix-rules.md` §3, which is the **only** place derivation examples live. Do not restate examples here; a copy in this file drifted from the table through 4.2 (it claimed "Q1" yields `PRJ`, when the algorithm yields `Q1`). Present the fallback plainly — "I couldn't derive a good prefix from that name, so I've suggested `PRJ`; you'll probably want to pick something better."
 
 If `/shared/prefix-registry/` does not exist (org-public creation, `action_items_enabled` true): provisioning is incomplete — "Ask your org admin to run `@ai:install-collection projects` (Step 5.5 provisioning)." Halt rather than proceeding without a prefix: silently skipping reservation is how colliding prefixes get in.
 

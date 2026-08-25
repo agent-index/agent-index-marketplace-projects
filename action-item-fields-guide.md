@@ -85,7 +85,7 @@ A definition that breaks any of these is **skipped at read time** — that defin
 - A `type` outside `string`, `number`, `single-select`, `date`
 - `single-select` with a missing or empty `options` array
 - `options` on any type other than `single-select`, or `unit` on any type other than `number`
-- A `default` that is not one of the field's own `options` (`single-select`), or that is not numeric (`number`)
+- A **non-null** `default` that is not one of the field's own `options` (`single-select`), or is not numeric (`number`). `default: null` means "no default" and is valid on every type
 - A `status` other than `active` or `deprecated`
 
 Nothing validates this file when you save it — there is no schema check at write time. These rules are enforced when a capability reads the config, which is why they are listed here rather than left implicit.

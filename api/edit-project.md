@@ -240,7 +240,7 @@ Never edit an archived project. The archived check in Step 1 is mandatory.
 
 Never allow `status` to be changed via this task. Status transitions are handled exclusively by `archive-project` and `unarchive-project`.
 
-Never change the action-item prefix of a project that has issued at least one action item. Read `action-items.json` and check it — do not infer from `next_id`, and do not take the member's word for it. This check is mandatory, and the refusal states the reason.
+Never change the action-item prefix of a project that has issued at least one action item. Read `action-items.json` and check it directly rather than taking the member's word for it. **"Issued" means a non-empty `items` array OR `next_id` greater than 1** — items can be deferred out or deleted by hand, and those IDs may still be referenced outside agent-index, so the array alone is not evidence. If the file cannot be read, fail closed and refuse. This check is mandatory and the refusal states the reason. (`action-item-prefix-rules.md` §8 is the authority; this restates only the trigger, not the rules.)
 
 Never release an old prefix claim before the replacement claim's guarded `if_revision` write has succeeded. Claim-then-release, never release-then-claim.
 

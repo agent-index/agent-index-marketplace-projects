@@ -76,7 +76,7 @@ Validate each definition on read, rejecting any that:
   - has a `type` outside `string`, `number`, `single-select`, `date`
   - is `single-select` with a missing or empty `options` array
   - declares `options` on a type other than `single-select`, or `unit` on a type other than `number`
-  - has a `default` that is not among its own `options` (`single-select`) or is non-numeric (`number`)
+  - has a **non-null** `default` that is not among its own `options` (`single-select`) or is not numeric (`number`). `default: null` means "no default" and is valid for **every** type — the guide's own `estimated_size` example uses it
   - has a `status` other than `active` or `deprecated`
 
 These are the same constraints the admin guide states (`action-item-fields-guide.md`); validating them here is what makes the guide's promises true at runtime, since nothing validates the file at write time.

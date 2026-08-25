@@ -131,7 +131,7 @@ If `action_items_enabled` is `false`: skip this step entirely.
 > *"Action items in this project will be numbered `{PREFIX}-001`, `{PREFIX}-002`, and so on. I suggest **{PREFIX}** based on the project name. Accept it, or give me a different one — 2 to 6 characters, uppercase, starting with a letter."*
 
 4. If the member supplies their own, validate it (§4) and check availability. On rejection, give the **specific** reason — "prefixes must be uppercase" rather than "invalid input".
-5. If the member declines to set one: record `null`. The project reads as `AI` (§9), exactly like every project created before 4.2.
+5. If the member declines to set one: record `null`. The project's effective prefix then resolves per `action-item-prefix-rules.md` §9 — for a brand-new project, which has no items yet, that means `AI`. (Through 4.2 this step claimed that matched "every project created before 4.2". It did not: existing projects were already using their own conventions, and §9 now resolves those from the project's own items.)
 
 **No write happens in this step.** The prefix is only *reserved* by the claim in Step 9, so an abandoned interview never leaves an orphan claim in the registry. Because of that gap, the Step 9 claim can still lose a race — it is written to handle that (§5).
 
@@ -338,7 +338,7 @@ On confirmation:
 
    If the guarded write returns `REVISION_CONFLICT`, another member claimed it between Step 2.5 and now. Take the next candidate (§6), tell the member what changed, and retry — bounded at 3 attempts, then ask them to choose. Never proceed on a lost claim: a prefix recorded on a project but held by someone else in the registry is the one state this whole protocol exists to prevent.
 
-   **Nothing writes the prefix into `project.md` or the pointer until this claim is confirmed.** If no prefix was set, proceed with `action_item_prefix: null` — the project reads as `AI`.
+   **Nothing writes the prefix into `project.md` or the pointer until this claim is confirmed.** If no prefix was set, proceed with `action_item_prefix: null`; the effective prefix resolves per `action-item-prefix-rules.md` §9.
 
 2. Write `project.md`. The full format:
 

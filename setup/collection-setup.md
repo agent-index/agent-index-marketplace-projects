@@ -1,7 +1,7 @@
 ---
 name: projects-collection-setup
 type: collection-setup
-version: 3.0.6
+version: 4.3.0
 collection: projects
 description: Org-admin setup interview for the Projects collection
 upgrade_compatible: true

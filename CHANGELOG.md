@@ -6,6 +6,60 @@ Format: [MAJOR.MINOR.PATCH] — YYYY-MM-DD
 
 ---
 
+## [4.3.0] — <RELEASE_DATE> — a project keeps the IDs it already issues
+
+### Corrects a 4.2.0 statement
+
+The 4.2.0 entry below says existing projects "keep issuing `AI-` IDs and are not renamed."
+**The second half was true; the first half was false**, and it is retracted here rather than quietly
+dropped. 4.2 resolved an absent prefix to the constant `AI`, on the assumption that projects
+predating the feature had been issuing `AI-001`-style IDs — because `AI-` was hardcoded in 4.1. In
+practice projects were already using their own conventions (`AC-`, `AW-`, `CI-`, bare integers),
+since members had been hand-rolling prefixes, which is what motivated the feature. On 4.2 a project
+on `AC-040` would issue `AI-041` next, and the prefix lock made that split permanent.
+
+Nothing was ever renamed or renumbered — that half held.
+
+### Fixed
+
+- **A project now keeps issuing the IDs it already issues.** The effective prefix resolves as:
+  recorded `action_item_prefix` → else the prefix in use, derived from the highest existing item ID
+  → else `AI`, which is now reachable only for a project with no items at all. The 4.2 constant is
+  removed.
+- **Prefixes already in use can be reserved.** They held no registry claim, so another project could
+  be told one was free and mint colliding IDs. `manage-action-items` now offers to claim a derived
+  prefix at the point of use, and `upgrade/4-2-to-4-3.md` offers the same in bulk for an admin.
+  Claims carry the **project owner's** hash; an admin reconciling a project does not become its owner.
+- `default: null` on an action-item field is valid on **every** type and means "no default". The 4.2
+  validation rule rejected any non-numeric default, which rejected the admin guide's own
+  `estimated_size` example.
+- `edit-project` now matches the prefix rules on what "issued" means — a non-empty `items` array
+  **or** `next_id > 1`, failing closed if the file can't be read. 4.2's text contradicted the rules
+  reference it told the reader to follow.
+- The lost-race message is scripted verbatim. `REVISION_CONFLICT` is never shown to a member.
+- The registry README no longer claims entries are "never deleted" — there is exactly one case where
+  one is removed. Both the setup template and any README already provisioned under 4.2 are corrected.
+- `create-project` no longer restates a derivation example that had drifted from the normative table.
+- `setup/collection-setup.md` version was stale at 3.0.6 across three releases; now tracks the collection.
+
+### Added
+
+- `upgrade/4-2-to-4-3.md` — admin bulk reconciliation. Presents each visible project's in-use prefix
+  for accept / override / skip; nothing is guessed. Conflicts are reported and skipped rather than
+  aborting the pass. Re-runnable, and once an org is reconciled the re-run **is** the
+  duplicate-issuance audit.
+- A one-time session-start mention of private projects with an unclaimed prefix — the bulk upgrade
+  cannot see private projects by design, so this is how their owners find out.
+
+### Notes
+
+- **Nothing existing is rewritten.** Item IDs are never renumbered to add or change a prefix. Items
+  that predate any convention stay out of compliance permanently, by design.
+- The upgrade is **recommended, not required**: everything it does also happens per-project the next
+  time a member adds an action item.
+
+---
+
 ## [4.2.0] — 2026-07-28 — action-item identity and description
 
 ### Requires Admin Attention (read BEFORE provisioning)

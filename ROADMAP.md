@@ -1,7 +1,7 @@
 # Projects Collection — Roadmap
 
-Current version: 4.2.0
-Last updated: 2026-07-28
+Current version: 4.3.0
+Last updated: 2026-08-11
 
 ---
 
@@ -12,6 +12,8 @@ The collection covers the full project lifecycle — structured briefs, ideas, a
 **4.0 — two-tier access (breaking).** Projects are org-public by default and live in the org commons; private projects live in the owner's own member space and are *invisible* until shared or made public. Ideas are private-first and invisible by default. Artifacts inherit their parent's access structurally. Action items, decisions, reports and digests are project-record material — they follow the project's tier with no per-item prompts. Discovery runs on the pointer index `/shared/projects-index/`; `projects-manifest.json` is retired.
 
 **4.1 — `crossdriveread`.** Pointers carry `item_drive_id` so a shared private project or idea opens correctly from another member's drive (OneDrive parity; harmless on gdrive).
+
+**4.3 — a project keeps the IDs it already issues.** Corrects 4.2's assumption that unprefixed projects used `AI-` IDs; the effective prefix now resolves from a project's own items. Prefixes already in use can be reserved, at the point of use or in bulk via `upgrade/4-2-to-4-3.md`. Existing IDs are never renumbered.
 
 **4.2 — action-item identity and description.** Action item IDs are project-prefixed and org-unique (`MOB-014`), suggested at creation, confirmed by the creator, and locked once the project issues its first item. Org admins can define, extend and deprecate action-item fields at any time via `action-item-fields.json` — **the collection ships none**, so nothing changes for an org until its admin defines one. Members can tag both projects and action items. Two reference documents at the collection root are authoritative: `action-item-prefix-rules.md` and `action-item-fields-guide.md`.
 

@@ -1,7 +1,7 @@
 ---
 name: projects-tutorial
 type: skill
-version: 4.2.0
+version: 4.3.0
 collection: projects
 description: Explains the projects collection to members — projects (public by default), ideas (private and invisible by default), the structural artifact-inheritance rule, sharing, promotion, membership, custody, and lifecycle — through a guided tour or targeted answers.
 stateful: false
@@ -42,7 +42,7 @@ These are project-record material: they always follow the project's visibility, 
 
 Every action item gets an ID like `MOB-014`. The `MOB` part is the project's prefix, and you choose it when you create the project — the system suggests one from the project name and you accept it or type your own. It's unique across the org, so `MOB-014` identifies one specific item anywhere you paste it: a branch name, a Slack message, a pull request.
 
-There's one rule worth understanding rather than just obeying: **you can change the prefix freely until the project's first action item exists, and then it's fixed.** That sounds strict, and the reason is that the ID stops being ours the moment it's used. Once `MOB-014` is in a branch name or a document, renaming the prefix would make that reference wrong, and renumbering items would break every other reference at the same time. So the prefix locks while it's still free to change, and stays put once anything depends on it. Projects created before 4.2 keep using `AI-` and carry on working exactly as before — nothing was renamed.
+There's one rule worth understanding rather than just obeying: **you can change the prefix freely until the project's first action item exists, and then it's fixed.** That sounds strict, and the reason is that the ID stops being ours the moment it's used. Once `MOB-014` is in a branch name or a document, renaming the prefix would make that reference wrong, and renumbering items would break every other reference at the same time. So the prefix locks while it's still free to change, and stays put once anything depends on it. A project that already had action items keeps the prefix it was already using — if its items are `AC-001…AC-040`, the next one is `AC-041`. **Existing IDs are never renumbered**, including ones that predate any prefix convention; if some of your older IDs don't match the current scheme, they stay as they are. The first time you add an item to such a project, you'll be offered the chance to reserve its prefix so another project can't take it.
 
 Your org may also define **fields** on action items — a type, an effort estimate, whatever it tracks. These are set up by an admin and shared by every project, so if you see them, they're org-wide; if you don't, your org hasn't defined any. Ask your admin if you want one.
 

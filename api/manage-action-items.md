@@ -38,6 +38,8 @@ The member identifies a project and describes what they want to do: create an it
 
 On demand. Also surfaced at session-start if the member has open or newly unblocked action items.
 
+**Session-start prefix mention (4.3):** if the member owns private projects whose in-use prefix is derived but unclaimed, mention the count **once** — "{N} of your private projects haven't claimed their action-item prefix." Private projects are invisible to an admin, so the bulk upgrade cannot reach them; this is how their owners find out. Once per session, never repeated, never blocking.
+
 ---
 
 ## Workflow
@@ -52,7 +54,15 @@ If `action_items_enabled` is `false`: halt with appropriate message.
 
 Read `{base}/action-items.json` via `aifs_read`.
 
-**Action-item ID prefix (4.2):** read `action_item_prefix` from the project's `project.md` frontmatter. If absent or `null`, the prefix is `AI` — resolved at read time, and **nothing is written to the project to record that fallback**. Full rules in `action-item-prefix-rules.md` at the collection root.
+**Action-item ID prefix (4.3):** resolve the project's effective prefix in this order, and write nothing while resolving:
+
+1. `action_item_prefix` from `project.md` frontmatter — the normal path once a project has claimed one.
+2. Else the **in-use prefix**: the alphabetic stem of the highest-numbered existing item ID (`AC-040` → `AC`). This is how a project keeps issuing the IDs it already issues before anything has been claimed.
+3. Else `AI` — reachable only when the project has **no items and no recorded prefix**.
+
+4.2 resolved an absent prefix to the constant `AI`. That was wrong: projects in the wild already used their own conventions (`AC-`, `AW-`, `CI-`, bare integers), so the constant split live sequences. Step 2 replaces it. Full rules in `action-item-prefix-rules.md` at the collection root.
+
+**Existing item IDs are never rewritten** — not to add a prefix, not to change one, not ever. A project whose items predate any convention keeps them exactly as they are.
 
 **Org field config (4.2):** read `action-item-fields.json` **once here**, not inside any per-item loop. Three cases, all non-fatal:
 
@@ -111,7 +121,20 @@ Collect:
 - **Org fields (4.2, only if any are active):** ask for each active field in config order. For a `single-select`, offer the `options` list and accept only a listed value — on a miss, restate the valid options rather than rejecting generically. For a `number`, accept a numeric value and echo it with the field's `unit` if one is defined. For a `date`, normalize to ISO `YYYY-MM-DD`. Every field is optional: "skip" leaves it unset, which reads as the field's default. Do not ask about deprecated fields.
 - **Tags (4.2, optional):** "Any tags? " and, when the project has tags of its own, offer them as suggestions: "This project uses `mobile`, `q3` — reuse any of those, or add your own." Suggesting existing values is what keeps a tag vocabulary from fragmenting. **Normalize on write:** lowercase, spaces to hyphens, consecutive hyphens collapsed, leading and trailing hyphens removed. Show the normalized form when it differs from what the member typed. Item tags are independent — the item does **not** inherit the project's tags.
 
-Write the item to action-items.json. **Assign the ID as `{PREFIX}-{NNN}`**, where `{PREFIX}` is the project's prefix resolved in Step 1 (`AI` when unset) and `{NNN}` is `next_id` zero-padded to three digits, exactly as before. Increment `next_id`. Store org field values nested under a `fields` object and tags under `tags`:
+**Claim guard (4.3) — run before issuing the ID.** If the effective prefix came from resolution step 2 (derived, not recorded) **and** `/shared/prefix-registry/{PREFIX}.json` does not exist, offer to reserve it, in one line:
+
+> *"This project's items use `{PREFIX}-`. I'll claim `{PREFIX}` for it so nobody else takes it — ok?"*
+
+- **Accept** → claim via the two-write protocol (`action-item-prefix-rules.md` §5), with `owner_hash` set to the **project's owner** from its pointer — never the current member's, unless they are the owner. Then write `action_item_prefix` into `project.md` and the pointer. Then issue the ID.
+- **Decline** → issue the ID and carry on. Record nothing, and offer again next time: a refusal usually means "not now", not "never", so persisting it would be wrong.
+- **Already claimed by this project** → no offer; there is nothing to do.
+- **Already claimed by a different project** → **do not block the member's work.** Issue the ID under the derived prefix — those IDs are already in circulation — and surface the conflict: two projects are using one prefix, neither can be renumbered, and a human has to decide.
+
+Ambiguity is **presented, never guessed**: mixed stems within one project, bare-integer IDs with no stem at all, or an empty `items` array with `next_id > 1` (IDs were issued and removed, and may still be referenced elsewhere). Show what was found and let the member choose or skip; skipping takes the decline path.
+
+This mirrors the assignment guard above — an inline check at the moment of action rather than a separate chore.
+
+Write the item to action-items.json. **Assign the ID as `{PREFIX}-{NNN}`**, where `{PREFIX}` is the effective prefix resolved in Step 1 and `{NNN}` is `next_id` zero-padded to three digits, exactly as before. Increment `next_id`. Store org field values nested under a `fields` object and tags under `tags`:
 
 ```json
 { "id": "MOB-014", "title": "...", "owner": "...", "status": "open",

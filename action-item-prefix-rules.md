@@ -63,7 +63,11 @@ The registry is `/shared/prefix-registry/{PREFIX}.json` — **one file per prefi
    ```
 3. **Write the identical record a second time, passing `if_revision` set to the revision from step 2.**
    - **Succeeds** → nobody wrote to that path between your two writes. The claim is yours. Keep the new revision.
-   - **`REVISION_CONFLICT`** → another member's claim landed in between and yours has been overwritten. You have lost the race. Take the next candidate (§6), tell the member what changed, and retry.
+   - **`REVISION_CONFLICT`** → another member's claim landed in between and yours has been overwritten. You have lost the race. Take the next candidate (§6) and tell the member, using this wording:
+
+     > *"`{PREFIX}` was just claimed by another project while we were talking, so it's taken. I've suggested `{NEXT}` instead."*
+
+     **Never surface `REVISION_CONFLICT`, revisions, or retry counts to a member.** They are implementation detail; the member needs to know the prefix changed and what it changed to. This is the only member-facing moment in the prefix flow that was left unscripted through 4.2, which is exactly why it is scripted here.
 4. Bounded at **3 attempts**. After that, ask the member to choose a prefix directly rather than looping.
 
 ### Why the second, guarded write is necessary
@@ -103,9 +107,26 @@ The suggested prefix is **always presented for explicit acceptance**, and the me
 - **Existing IDs are never renumbered**, under any circumstance.
 - `prefix_history` on the project record retains superseded prefixes so previously issued IDs still resolve. Consumers must therefore resolve a prefix to a project by lookup, never by assuming a pattern-derived mapping is permanent — even though a project has exactly one *active* prefix at any moment.
 
-## 9. Absent prefix
+## 9. Absent prefix — resolved from the project's own history
 
-A project with no `action_item_prefix` (every project created before 4.2, and any project whose owner declined to set one) reads as `AI`. This is resolved **at read time**; nothing is written to bring an existing project into the new scheme.
+A project with no recorded `action_item_prefix` resolves its effective prefix as:
+
+1. The **in-use prefix** — the alphabetic stem of its highest-numbered existing item ID (`AC-040` → `AC`).
+2. Else `AI`, reachable only when the project has **no items at all**.
+
+Resolved at read time; nothing is written by resolution.
+
+### Why this replaced the constant (4.3)
+
+Through 4.2 this section said an absent prefix reads as `AI`, on the assumption that projects predating the feature had been issuing `AI-001`-style IDs — because `AI-` was the hardcoded prefix in the 4.1 source. **That assumption was false in practice.** Real projects were already using their own conventions (`AC-`, `AW-`, `CI-`, and bare integers), because members had been hand-rolling per-project prefixes — which is what motivated this feature in the first place.
+
+The constant therefore split live sequences: a project on `AC-040` would mint `AI-041`, and §8's lock made the split permanent. Resolving from the project's own history is what makes "keep issuing what you already issue" true rather than aspirational.
+
+**Existing IDs are never rewritten** to add or change a prefix. Items that predate any convention stay exactly as they are, permanently and by design.
+
+### Claiming what is already in use
+
+A derived prefix holds no registry claim, so another project can be handed it. `manage-action-items` therefore offers to claim it at the point of use — when a new item is created on a project whose derived prefix is unclaimed — and the admin upgrade (`upgrade/4-2-to-4-3.md`) offers the same in bulk for every project an admin can see. Both write the claim with the **project owner's** `member_hash`: an admin reconciling a project performs an administrative act, not an acquisition of ownership.
 
 ## 10. Claim lifetime
 

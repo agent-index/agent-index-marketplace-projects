@@ -38,7 +38,9 @@ The member identifies a project and describes what they want to do: create an it
 
 On demand. Also surfaced at session-start if the member has open or newly unblocked action items.
 
-**Session-start prefix mention (4.3):** if the member owns private projects whose in-use prefix is derived but unclaimed, mention the count **once** — "{N} of your private projects haven't claimed their action-item prefix." Private projects are invisible to an admin, so the bulk upgrade cannot reach them; this is how their owners find out. Once per session, never repeated, never blocking.
+**Session-start prefix mention (4.3):** **alongside** the open-items surfacing above — not as a separate channel — if the member owns private projects whose in-use prefix is derived but unclaimed, mention the count once: "{N} of your private projects haven't claimed their action-item prefix." Private projects are invisible to an admin, so the bulk upgrade cannot reach them; this is how their owners find out.
+
+This rides the session-start surfacing this task already declares; it introduces no new mechanism, and if that surfacing does not fire, nothing is lost — the claim guard above is the guarantee, and this only shortens the window. Once per session, never repeated, never blocking.
 
 ---
 

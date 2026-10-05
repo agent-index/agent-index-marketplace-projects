@@ -1,7 +1,7 @@
 ---
 name: projects-tutorial
 type: skill
-version: 4.3.0
+version: 4.3.1
 collection: projects
 description: Explains the projects collection to members — projects (public by default), ideas (private and invisible by default), the structural artifact-inheritance rule, sharing, promotion, membership, custody, and lifecycle — through a guided tour or targeted answers.
 stateful: false
@@ -24,7 +24,7 @@ A project is the foundational record everything else hangs from: brief, mileston
 
 **Topic 2: Membership**
 
-On a public project the roster is bookkeeping — who plays what role; access is uniform anyway. On a **private** project, the roster IS the access list: adding a member (`@ai:edit-project`) applies a real Drive grant that you, the owner, approve on a review page — and the very first member you add ends the project's invisibility (its title and owner appear in the org directory; the data stays gated to the roster).
+On a public project the roster is bookkeeping — who plays what role; access is uniform anyway. On a **private** project, the roster IS the access list: adding a member (`@ai:edit-project`) applies a real Drive grant that you, the owner, confirm in the chat after seeing exactly what will change — each grant is then checked to make sure it took effect — and the very first member you add ends the project's invisibility (its title and owner appear in the org directory; the data stays gated to the roster).
 
 **Topic 3: Ideas — private and invisible by default**
 

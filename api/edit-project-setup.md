@@ -1,7 +1,7 @@
 ---
 name: edit-project-setup
 type: setup
-version: 3.0.4
+version: 3.0.5
 collection: projects
 description: Setup interview for the edit-project task
 target: edit-project
@@ -19,7 +19,6 @@ This setup takes about one minute. It connects your edit-project task to your or
 
 - `collection-setup-responses.md` is readable → if not: "The Projects collection hasn't been fully configured by your org admin yet. Contact them to complete collection setup before you can install this task."
 - The commons `/shared/projects/` is readable → if not: auth-retry guidance, then '@ai:member-bootstrap'.
-- permission-change-helper binary present (private-tier membership grants) → if not: '@ai:update'.
 
 ---
 
@@ -67,3 +66,4 @@ Any new org-level parameters introduced in a collection upgrade will be surfaced
 
 ### Migration Notes
 - v1.0 → future versions: migration notes will be added here as new versions are published.
+- 3.0.4 → 3.0.5 (projects 4.4.0): the pre-check for the retired permission-helper binary is removed — private-tier membership grants now go through the core permission-changes procedure (agent-index-core 3.32.0+). No member action needed.

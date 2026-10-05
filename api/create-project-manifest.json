@@ -3,8 +3,8 @@
   "type": "task",
   "display_name": "Create Project",
   "collection": "projects",
-  "collection_version": "4.3.0",
-  "version": "4.3.0",
+  "collection_version": "4.4.0",
+  "version": "4.4.0",
   "eol_date": null,
   "eol_warning_days": 60,
   "stateful": false,
@@ -23,7 +23,13 @@
     "skills": [],
     "tasks": []
   },
-  "external_dependencies": [],
+  "external_dependencies": [
+    {
+      "system": "Slack / Microsoft Teams / Discord (conditional)",
+      "access_required": "Channel creation, member invitation (only if comms_channel_enabled)",
+      "contact": "org admin"
+    }
+  ],
   "reads_from": null,
   "writes_to": null
 }

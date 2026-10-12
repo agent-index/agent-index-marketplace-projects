@@ -49,7 +49,7 @@ On demand, whenever a member wants to start exploring a concept for a project.
 
 Read `collection-setup-responses.md` via `aifs_read` to get `ideas_enabled` and `ideas_default_visibility` (4.0 — replaces `ideas_require_private_stage`). Read local `member-index.json` for `member_hash` and `member_folder_id` (missing → "@ai:update" self-provision halt).
 
-**Tool selection:** the member's private remote space and project locations both use `aifs_*`; private space via `id:{member_folder_id}/...` anchors (standards.md § "Addressing").
+**Tool selection:** the member's private remote space and project locations both use `aifs_*`; private space via `id:{member_folder_id}/...` anchors (`runtime-reference.md` § "Addressing: Owned Content and Sharing", in agent-index-core).
 
 If `ideas_enabled` is `false`: surface "Ideas aren't enabled for your org's project setup. Contact your org admin if you'd like this feature." Halt.
 

@@ -1,7 +1,7 @@
 ---
 name: create-project
 type: task
-version: 4.4.0
+version: 4.4.1
 collection: projects
 description: Creates a new project — org-public by default (the org commons; every member can see and contribute) or private (the member's own My Drive, invisible until shared) — including ownership, brief, milestones, team members, roles, optional comms channel, and project tracking directories. Org-public projects get a discovery pointer; private ones don't until shared.
 stateful: false
@@ -432,7 +432,7 @@ On confirmation:
        "owner": "{owner display_name}", "owner_hash": "{member_hash}",
        "status": "active", "scope": "org_public",
        "action_item_prefix": "{PREFIX, or null if none set}",
-       "location": {"path": "/shared/projects/{slug}/"},
+       "location": {"path": "/shared/projects/{slug}/", "folder_id": "{the commons project folder's Drive id — aifs_stat after creating it; members on Google Drive open org-public projects by id (publicptrid, finding 49)}"},
        "created": "{today}", "last_updated": "{ISO}", "owner_departed": false
      }
      ```

@@ -6,6 +6,11 @@ Format: [MAJOR.MINOR.PATCH] â€” YYYY-MM-DD
 
 ---
 
+## [4.4.1] — <RELEASE_DATE> — org-public projects carry their folder id
+
+### Fixed
+- **Org-public project pointers carry `location.folder_id` (`publicptrid`, Dev Two live test finding 49).** create-project 4.4.1 and transition-project 4.3.1 record the commons folder's Drive id next to the path; edit-project 4.4.1's tier resolution opens org-public projects by that id and reads the pointer index by `id:{resource_ids.shared_root}` when the path doesn't resolve. The other project tasks that open by path follow the core rule (CLAUDE.md template, core 4.0.0): re-read a failed `/shared/...` path as `id:{resource_ids.shared_root}/...`.
+
 ## [4.4.0] — 2026-10-02 — Sharing through the core permission-changes procedure
 
 **MINOR — requires agent-index-core 3.32.0.** Part of retiring the permission-change-helper (design record: `/shared/projects/core-improvements/artifacts/retire-permission-helper-*.md`).

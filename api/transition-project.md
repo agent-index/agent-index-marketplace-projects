@@ -1,7 +1,7 @@
 ---
 name: transition-project
 type: task
-version: 4.3.0
+version: 4.3.1
 collection: projects
 description: Move a project between visibility tiers. Private → org-public copies the whole project (record, action items, decisions, ideas/, artifacts/, activity) into the org commons — the org gains custody; roster grants become moot. Org-public → private copies it into the owner's My Drive and leaves an archived stub in the commons (members can't delete /shared — and going private does not un-publish what the org already saw). Owner-only; the pointer is overwritten to match.
 stateful: false
@@ -44,7 +44,7 @@ No writes before explicit confirmation.
 
 1. Recursively copy `id:{folder_id}/` → `/shared/projects/{slug}/` (materialize each destination directory with a `.keep` before `aifs_copy` — copy does NOT auto-create parents; read+write fallback per file). Slug collision in the commons → halt (never overwrite another project).
 2. Update the copied `project.md`: `visibility: org_public`. Append `transitioned_to_org_public` activity event.
-3. **Overwrite/create the pointer:** `scope: "org_public"`, `location: {"path": …}`, and carry `action_item_prefix` from the project record (4.2 — the pointer is the cheap availability scan surface; a project whose prefix is missing from its pointer is invisible to the next member's collision check).
+3. **Overwrite/create the pointer:** `scope: "org_public"`, `location: {"path": …, "folder_id": "{commons folder id from aifs_stat}"}` (`publicptrid`, finding 49 — members on Google Drive open org-public projects by id), and carry `action_item_prefix` from the project record (4.2 — the pointer is the cheap availability scan surface; a project whose prefix is missing from its pointer is invisible to the next member's collision check).
 3a. **Prefix registry (4.2):** update `/shared/prefix-registry/{PREFIX}.json` — set `"visibility": "org_public"` and **add `project_slug`**. The claim itself is unchanged; only its disclosure level changes. If the project has **no** prefix, offer one now: it has just become discoverable, and this is the natural moment (`action-item-prefix-rules.md` §3–§7). If it has already issued `AI-` items, the lock applies — do not offer (§8).
 4. Mark the My Drive original `moved-to-org` (stub) or owner deletes it (their space — offer both).
 5. Offer (not force) revocation of the now-moot roster grants: `unshare` changes through the permission-changes procedure, one per grantee shown by a fresh `aifs_get_permissions(id:{folder_id})` read — not the roster (`source: "current_state"`; each removal confirmed individually).

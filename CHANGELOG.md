@@ -6,7 +6,7 @@ Format: [MAJOR.MINOR.PATCH] â€” YYYY-MM-DD
 
 ---
 
-## [4.4.1] — <RELEASE_DATE> — org-public projects carry their folder id
+## [4.4.1] — 2026-10-13 — org-public projects carry their folder id
 
 ### Fixed
 - **Org-public project pointers carry `location.folder_id` (`publicptrid`, Dev Two live test finding 49).** create-project 4.4.1 and transition-project 4.3.1 record the commons folder's Drive id next to the path; edit-project 4.4.1's tier resolution opens org-public projects by that id and reads the pointer index by `id:{resource_ids.shared_root}` when the path doesn't resolve. The other project tasks that open by path follow the core rule (CLAUDE.md template, core 4.0.0): re-read a failed `/shared/...` path as `id:{resource_ids.shared_root}/...`.
@@ -338,4 +338,5 @@ This release was assembled from a working-tree state that had drifted on dev_sou
 - `collection-setup.md` â€” org admin configuration for shared projects path and roles mode
 - `projects-manifest.json` initialization at collection setup
 - Three roles configuration modes: `org-mandated`, `org-suggested`, `project-defined`
+
 

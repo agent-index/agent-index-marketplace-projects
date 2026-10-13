@@ -6,6 +6,39 @@ Format: [MAJOR.MINOR.PATCH] â€” YYYY-MM-DD
 
 ---
 
+## [4.4.1] — 2026-10-13 — org-public projects carry their folder id
+
+### Fixed
+- **Org-public project pointers carry `location.folder_id` (`publicptrid`, Dev Two live test finding 49).** create-project 4.4.1 and transition-project 4.3.1 record the commons folder's Drive id next to the path; edit-project 4.4.1's tier resolution opens org-public projects by that id and reads the pointer index by `id:{resource_ids.shared_root}` when the path doesn't resolve. The other project tasks that open by path follow the core rule (CLAUDE.md template, core 4.0.0): re-read a failed `/shared/...` path as `id:{resource_ids.shared_root}/...`.
+
+## [4.4.0] — 2026-10-02 — Sharing through the core permission-changes procedure
+
+**MINOR — requires agent-index-core 3.32.0.** Part of retiring the permission-change-helper (design record: `/shared/projects/core-improvements/artifacts/retire-permission-helper-*.md`).
+
+### Changed
+- **`share-idea` 4.2.0, `edit-project` 4.4.0, `transition-project` 4.3.0** — every grant and removal goes through core `internal/permission-changes.md`. The owner sees the exact table, confirms it in chat (removals one at a time), and each change is applied and verified under the owner's own credentials. No helper binary, review page or outcome file. Pointers, scope and rosters list only changes that ended `applied` or `skipped_noop`.
+- **`share-idea` unshare:** the pointer goes `revoked` only when a fresh `aifs_get_permissions` read shows no explicit grants left; otherwise its scope lists whoever still has access.
+- **Recipients outside the org are allowed.** Owners can share an idea or add a private-project member by email even if the person isn't in the members registry. The table flags them **outside your org**. Previously such people were dropped.
+- **`transition-project`, going private:** the owner chooses who to keep *before* the grant table. If any grant isn't applied, the transition halts before the pointer flip, while the commons copy is still complete. A declined or cancelled table never removes anyone from the roster.
+- **`create-project` 4.4.0, private tier:** people named at creation are no longer written to the roster without a grant (that broke decision 5's roster == grants invariant: listed members had no access). They're handed to `edit-project`'s *Add member* flow right after creation, so each grant is confirmed and verified before they join the roster.
+- **`collaborative-acls.json`** uses the standard `acls[]` / `rationale` keys (was `grants[]` / `purpose`, which install-collection < 2.4.0 ignored).
+
+### Fixed
+- **`edit-project`:** private-tier access changes are now applied in Step 4, after the owner confirms the diff and before `project.md` is written, so "never mind" still means nothing changed. Roster entries, channel invitations and the "{N} new members" count cover only satisfied rows; removals update the roster and pointer from a fresh `aifs_get_permissions` read; pending people are reported. The first member of an invisible private project now creates its pointer. An unknown name on a private project needs an email (no unlinked roster entries without access); linking an unregistered member goes through the procedure. Changing the owner of a private project is blocked with the options to transition it public first or have the new owner create their own project. The members registry is read by id anchor.
+- **`transition-project`, going private:** re-grants no longer trust addresses from the roster (any member can edit an org-public `project.md`). Registry members get their registry `sharing_identity` (`source: "org_config"`); anyone else is granted only at an address the owner gives (`member_request`); people with no address are left off the private roster and pointer. The `transitioned_to_private` event is appended after the 3B.4 pointer flip.
+- **`share-idea`:** a later share builds the pointer `scope` from a fresh permissions read, so earlier grantees aren't dropped. The `idea_shared` event and the confirmation name only satisfied grantees and are skipped when nothing took effect. Unshare says "Access is revoked" only when the re-read shows no grants left.
+- **`create-project`:** private-tier members with no registry match are asked for an email before the hand-off, which now enters `edit-project` at Step 4.0 without a second diff confirmation. The members registry is read by id anchor.
+- **`collaborative-acls.json`:** declares `"requires_upgrade_review": ["3-to-4"]` so install-collection 2.4.0+ asks whether the 3-to-4 gated-idea review is done before applying the grants on an existing install.
+- **`upgrade/3-to-4.md`:** the gated-idea ACL cleanup declares `source: "current_state"` and `confirmer: "admin"`.
+- **`edit-project-setup` 3.0.5:** version bumped for the removed helper pre-check (content changed in this release); migration note added.
+- **`projects-tutorial` 4.3.1:** private-project membership is confirmed in chat, not on a review page.
+- Manifests' `external_dependencies` now match their frontmatter for every capability.
+
+### Removed
+- Dependency on the `permission-change-helper` skill and binary (frontmatter, manifests, `edit-project` setup pre-check).
+
+- **`upgrade/3-to-4.md`** step 4a records `"3-to-4"` in org-config `upgrade_reviews_confirmed` once the gated-idea review is done, so install-collection's upgrade-ordering guard doesn't ask again.
+
 ## [4.3.0] â€” 2026-09-05 â€” a project keeps the IDs it already issues
 
 ### Corrects a 4.2.0 statement
@@ -305,4 +338,5 @@ This release was assembled from a working-tree state that had drifted on dev_sou
 - `collection-setup.md` â€” org admin configuration for shared projects path and roles mode
 - `projects-manifest.json` initialization at collection setup
 - Three roles configuration modes: `org-mandated`, `org-suggested`, `project-defined`
+
 

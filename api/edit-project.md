@@ -1,15 +1,14 @@
 ---
 name: edit-project
 type: task
-version: 4.3.0
+version: 4.4.1
 collection: projects
-description: Edits an existing active project — brief, milestones, ownership, member list, roles, comms channel. Tier-resolved (4.0) — on org-public projects the roster is metadata; on PRIVATE projects membership IS the grant list (adding a member applies an owner-approved collaborator grant, Accept-gated and verified; the first member ends the project's invisibility).
+description: Edits an existing active project — brief, milestones, ownership, member list, roles, comms channel. Tier-resolved (4.0) — on org-public projects the roster is metadata; on PRIVATE projects membership IS the grant list (adding a member applies a collaborator grant through the core permission-changes procedure, confirmed by the owner and verified; the first member ends the project's invisibility).
 stateful: false
 produces_artifacts: false
 produces_shared_artifacts: false
 dependencies:
-  skills:
-    - permission-change-helper
+  skills: []
   tasks: []
 external_dependencies:
   - system: "Slack / Microsoft Teams / Discord (conditional)"
@@ -48,9 +47,9 @@ On demand, whenever a project record needs to change.
 
 Read `collection-setup-responses.md` via `aifs_read` for `roles_config` and all feature flags (`brief_enabled`, `brief_sections`, `milestones_enabled`, `comms_channel_enabled`, `comms_platform`, `comms_channel_naming_template`). Read local `member-index.json` for `member_hash` + `member_folder_id`.
 
-**Tier resolution (4.0):** resolve the named project via the pointer index `/shared/projects-index/` (org-public + shared-private projects) and the member's own private projects (`id:{member_folder_id}/projects/`). Tier → base path: org-public = `location.path`; private = the cross-drive anchor `id:{item_drive_id}:{folder_id}/` when the pointer carries `item_drive_id` (a shared-private project lives on the owner's drive — C.1.3 `crossdriveread`), falling back to the bare `id:{folder_id}/` for older pointers and for the member's OWN private projects (own-drive, where the bare anchor resolves correctly). On gdrive the bare anchor already reaches shared items, so the qualified form is OneDrive parity and harmless there. `projects-manifest.json` is retired.
+**Tier resolution (4.0):** (read the index as `id:{resource_ids.shared_root}/projects-index/` when the path doesn't resolve — `resource_ids` from org-config, read as `id:{org_config_id}`; open an org-public project by its pointer's `location.folder_id` when present — projects 4.4.1, `publicptrid`) resolve the named project via the pointer index `/shared/projects-index/` (org-public + shared-private projects) and the member's own private projects (`id:{member_folder_id}/projects/`). Tier → base path: org-public = `location.path`; private = the cross-drive anchor `id:{item_drive_id}:{folder_id}/` when the pointer carries `item_drive_id` (a shared-private project lives on the owner's drive — C.1.3 `crossdriveread`), falling back to the bare `id:{folder_id}/` for older pointers and for the member's OWN private projects (own-drive, where the bare anchor resolves correctly). On gdrive the bare anchor already reaches shared items, so the qualified form is OneDrive parity and harmless there. `projects-manifest.json` is retired.
 
-**Write authority is tier-mechanical:** org-public = any member (edits activity-attributed); private = owner and collaborators. **Membership changes on a PRIVATE project are owner-only** (they are Drive grants — see Step 3).
+**Write authority is tier-mechanical:** org-public = any member (edits activity-attributed); private = owner and collaborators. **Membership changes on a PRIVATE project are owner-only** (they are Drive grants — collected in Step 3, applied in Step 4.0).
 
 If the member did not name a project: ask, listing what they can see (their own + pointers).
 
@@ -124,11 +123,14 @@ Project tags are not inherited by the project's action items; item tags are mana
 **Name change:**
 Ask for the new name. Generate the new slug. Check for collisions with existing projects (excluding the current project). Warn the member: "Changing the project name will also change its directory from `{old-slug}` to `{new-slug}`. Any links or references to the old path will need to be updated." Require explicit confirmation of the rename consequence before accepting.
 
+**Resolving a person (used by owner, PM and member changes):** read the members registry **by id anchor** — org-config `resource_ids.members_registry` → `aifs_read("id:{members_registry_id}")` (org-config itself is read by `id:{org_config_id}` from local `agent-index.json`). Never read it by a root path such as `/members-registry.json`: a member who isn't a Drive member of the org root gets `FILE_NOT_FOUND` there even though the file exists. Search by `display_name` (case-insensitive partial match), confirm if one match is found, disambiguate if multiple. What happens when there is no match depends on the field and the tier (below).
+
 **Owner change:**
-Ask for the new owner's name. Resolve their identity against the members registry using the same process defined in `create-project.md` Step 3: search `/members/members-registry.json` by `display_name`, confirm if one match is found, disambiguate if multiple, and note if unregistered.
+- **Org-public project:** ownership is record metadata. Ask for the new owner's name and resolve it as above; if there's no match, record them by name as unregistered.
+- **Private project:** **block the change.** A private project lives in the owner's own drive, so its ownership can't move from here. Say: *"'{name}' is private, so it lives in your own drive and I can't hand ownership to someone else from here. Two options: make it org-public first with '@ai:transition-project' (then the owner is just a record field you can change), or {new owner} creates their own project and you add them as a member here in the meantime."* Collect no owner change; carry on with any other edits.
 
 **Project Manager change:**
-Ask for the new PM's name. Resolve identity the same way as owner changes.
+Ask for the new PM's name. Resolve it as above (no match → recorded by name as unregistered). The PM field is record metadata on both tiers; on a private project it grants nothing, so a PM who also needs access is added as a member.
 
 **Project brief changes** (only if `brief_enabled` is `true`):
 Present the current brief sections with their content (or note which are empty). Ask what the member wants to change. Supported operations:
@@ -155,20 +157,28 @@ Present the current milestones with their names, target dates, and statuses. Sup
 
 **Member changes (4.0 — the roster collapse, design decision 5):**
 
-- **On an ORG-PUBLIC project:** the roster is attribution/assignment metadata only — access is uniform for the whole org. Add/remove/change-role edits the roster in project.md, nothing else. No grants exist or are needed.
-- **On a PRIVATE project:** the roster IS the grant list. *Add member* = a `writer` (collaborator) grant on `id:{project_folder_id}` — ONE permission-change-helper spec, the **owner** Accepts, **HARD GATE** (outcome `applied` OR independent `aifs_get_permissions`), THEN the roster entry is written and the pointer scope updated (first-ever member → the pointer is CREATED now, ending the project's invisibility: title + owner become org-visible, data stays gated). The created/updated pointer's `location` carries **`item_drive_id`** alongside `folder_id` (from project.md frontmatter, written by create-project; if absent on a pre-C.1.3 project, `aifs_stat` the project folder once and record both its `id` and `drive_id`) so the grantee can open the private project cross-drive (C.1.3 `crossdriveread`) — a bare `id:{folder_id}` would 404 against the recipient's own drive. *Remove member* = the symmetric `unshare` + roster + pointer mirror; removing the last member → pointer `scope` reverts toward owner-only (`"private"` object-form empty) — pointer is never deleted (title residue accepted). Unregistered people cannot be granted (Drive needs an account) — they may be roster-listed as unlinked, with a clear note that they have NO access until registered and re-added.
-
-- *Add member (both tiers):* Ask for a name and role. Role must be from current roles list. Resolve their identity against the members registry using the same process as owner changes: search by `display_name`, confirm if one match, disambiguate if multiple, note if unregistered.
+- *Add member (both tiers):* Ask for a name and role. Role must be from current roles list. Resolve the person as above.
 - *Remove member:* Ask which member to remove. Confirm before marking for removal.
 - *Change member role:* Ask which member and what their new role should be.
-- *Link unregistered member:* If a project has members recorded with `member_hash: null` (added before they joined the org), and the member is now in the registry, offer to link their full identity. Search the registry by display name, confirm the match, and update the entry with their `member_hash` and `email`.
+- *Link unregistered member:* If a project has members recorded with `member_hash: null` (added before they joined the org), and the member is now in the registry, offer to link their full identity. Search the registry by display name and confirm the match.
 - Multiple member changes can be collected in sequence.
+
+- **On an ORG-PUBLIC project:** the roster is attribution/assignment metadata only — access is uniform for the whole org. Add/remove/change-role/link edits the roster in project.md, nothing else. No grants exist or are needed. A name with no registry match can be roster-listed as unlinked (`member_hash: null`, `email: null`) — on this tier that grants and withholds nothing.
+- **On a PRIVATE project:** the roster IS the grant list. **In this step you only collect** — no grant, removal, roster entry or pointer change happens here. Access changes are applied in Step 4, after the member confirms the diff (Step 4.0).
+  - *Add member* → one `share` row (`writer`, collaborator) on `id:{project_folder_id}`.
+  - *Remove member* → one `unshare` row (`source: "current_state"`), confirmed individually by the procedure.
+  - *Link unregistered member* → a legacy unlinked entry has no access, so linking is an *Add member* for their registry `sharing_identity`. The entry's `member_hash`/`email` are written only if that row is satisfied.
+  - *Change member role* → roster metadata only (every collaborator is `writer`); no access change.
+  - **Recipients.**
+    - A registered member → their `sharing_identity` (email on gdrive, UPN on onedrive).
+    - A name with no registry match → **ask the owner for their email address. Never guess.** If they don't have one, the person is **not** added — don't roster-list them unlinked on a private project, because the roster would claim access they don't have. Say: *"I'll need {name}'s email address to give them access. Add them again once you have it."*
+    - An address outside the registry (one the owner gives) is allowed. The procedure's table flags it **outside your org**; it's the owner's call. Tell the owner the person opens the project from their storage app's "Shared with me", because agent-index discovery pointers are for org members.
 
 **Comms channel changes** (only if `comms_channel_enabled` is `true`):
 - *Create channel (if project doesn't have one):* Generate the channel name from the naming template. Confirm or customize the name. Record for creation during write step.
 - *Rename channel:* Not supported directly — channel renaming depends on platform capabilities. Surface: "Channel renaming varies by platform. You may need to rename the channel directly in {comms_platform}. I can update the project record to reflect the new name if you've already renamed it."
 - *Archive channel (without archiving the project):* Prompt to confirm. Record for archival during write step.
-- If new members are being added in this edit session and the project has an active channel, note that they will be invited to the channel as part of the write step.
+- If new members are being added in this edit session and the project has an active channel, note that they will be invited to the channel as part of the write step (on a private project, only those whose access is confirmed and verified in Step 4.0).
 
 **On success for all collected changes:** Proceed to Step 4.
 
@@ -182,31 +192,62 @@ Present a clear summary of all proposed changes as a diff — what the current v
 > {for each changed field}:
 > {field}: "{old value}" → "{new value}"
 > {if new members added and channel exists}: New members will be invited to #{channel_name}
+> {private tier, if membership changes}: Access changes: give {names} collaborator access / remove {names}' access — I'll show you the exact permission table to confirm next, and nothing changes until you confirm it.
 >
 > Ready to apply these changes?
 
-Wait for explicit confirmation.
+Wait for explicit confirmation. Nothing has been changed yet — not even access — so declining here (or "never mind") discards everything: "No changes were made to '{name}'."
 
 On confirmation:
+
+0. **Private-tier access changes (only if membership adds, removals or links were collected on a PRIVATE project) — before anything is written.** Follow `/agent-index-core/internal/permission-changes.md` with one table for this edit:
+   - `calling_task: "edit-project"`, `purpose: "Update who can access project '{name}'"`, `confirmer: "owner"` (only the owner reaches this step — Step 1).
+   - One `share` per added or linked member: `resource: "id:{project_folder_id}"` (bare ID from project.md `folder_id`), `resource_label: "Project '{name}'"`, `is_folder: true`, `recipient` = their `sharing_identity` or the email the owner gave, `role: "writer"`, `source: "member_request"`.
+   - One `unshare` per removed member on the same resource, `source: "current_state"`.
+
+   The procedure shows its own table and takes its own confirmation; the diff confirmation above does not count for it. If the owner's reply cancels the table, every access row is declined and nothing about membership changes. Before writing anything else, ask once: *"Apply your other changes without the access changes?"* — a clear yes continues with the non-membership edits only; anything else ends with "No changes were made to '{name}'."
+
+   When the procedure returns, compute the membership result:
+   - **Adds / links:** a roster entry is written (or an unlinked entry gets its `member_hash` and `email`) **only** for rows `applied` or `skipped_noop`. Every other row is pending: the person is not on the roster.
+   - **Removals:** never take "who still has access" from the list you meant to remove. Re-read `aifs_get_permissions({path: "id:{project_folder_id}", include_inherited: true})`. Drop a roster entry only when that re-read shows the person no longer has access; anyone still shown keeps their entry (a declined or failed removal leaves them in).
+   - **Pointer scope** (used in 4.3) = the roster entries whose `sharing_identity`/email appears with access in that fresh re-read.
 
 1. If the project name changed: rename the project directory from `{old-slug}` to `{new-slug}`.
 
 1.5. **If the action-item prefix changed:** claim the new prefix via the two-write protocol (`action-item-prefix-rules.md` §5 — write, then guarded `if_revision` write), **then** release the old claim by deleting `/shared/prefix-registry/{OLD}.json`. Never the reverse order — a failure after releasing and before claiming leaves the project with no reservation, and another project can take the prefix it still has recorded. If the claim fails, abandon the prefix change and report it; apply the rest of the member's edits normally.
 
-2. Write the updated `project.md` with all changes applied. Update `last_updated` to today's date. If the prefix changed, write the new `action_item_prefix`; if tags changed, write the normalized `tags` list.
+2. Write the updated `project.md` with all changes applied. Update `last_updated` to today's date. If the prefix changed, write the new `action_item_prefix`; if tags changed, write the normalized `tags` list. On a private project the `members` list is the Step 4.0 result — never the list as collected.
 
-3. If name, owner, status, **action-item prefix**, or (private tier) membership changed AND a pointer exists (org-public, or ever-shared private): overwrite the pointer at `/shared/projects-index/{owner_hash}-{slug}.json` to match. Membership scope changes are written ONLY after the grant hard gate passes (see Member changes above). Invisible private projects: no pointer, nothing to update.
-
+3. **Pointer** at `/shared/projects-index/{owner_hash}-{slug}.json`:
+   - **A pointer exists** (org-public, or a private project that has had members) and name, owner, status, action-item prefix or (private tier) membership changed: overwrite it to match. On a private project `scope` is `{"collaborators": [ … ]}` from the Step 4.0 scope; if nobody remains, `"private"` (owner-only). The pointer is never deleted (title residue accepted).
+   - **No pointer yet** (a private project that has never had a member) and the Step 4.0 scope is non-empty: **create** it now — the first-ever member ends the project's invisibility (title and owner become org-visible; data stays gated to the grantees):
+     ```json
+     {
+       "type": "project", "name": "{name}", "slug": "{slug}",
+       "owner": "{owner display_name}", "owner_hash": "{owner_hash}",
+       "status": "active", "scope": {"collaborators": ["{sharing_identity or email}", "…"]},
+       "action_item_prefix": "{PREFIX, or null}",
+       "location": {"folder_id": "{project_folder_id}", "item_drive_id": "{item_drive_id}"},
+       "created": "{project created date}", "last_updated": "{ISO}", "owner_departed": false
+     }
+     ```
+   - `location` always carries **`item_drive_id`** alongside `folder_id` on a private project (from project.md frontmatter, written by create-project; if absent on a pre-C.1.3 project, `aifs_stat` the project folder once and record both its `id` and `drive_id`) so a grantee can open it cross-drive (C.1.3 `crossdriveread`) — a bare `id:{folder_id}` would 404 against the recipient's own drive.
+   - No pointer and an empty scope (nothing satisfied): write no pointer — the project stays invisible.
 4. If comms channel operations are pending:
    - *Channel creation:* Use the platform's MCP connector to create the channel. Set topic/description. Invite all registered members. If the connector is unavailable, set `comms_channel.status: pending` and note: "Channel creation is pending — I can't reach {comms_platform} right now. Try again later."
    - *Channel archival:* Use the platform's MCP connector to archive the channel. If the connector is unavailable, note: "I couldn't archive the channel on {comms_platform}. You may need to do this manually."
-   - *Member invitations (for newly added members):* Invite any newly added registered members to the existing channel. Unregistered members cannot be invited — note them. If the connector is unavailable, note who needs to be manually invited.
+   - *Member invitations (for newly added members):* Invite any newly added registered members to the existing channel. On a private project, invite **only** members whose Step 4.0 row was `applied` or `skipped_noop` — a pending member is not on the project. Unregistered members cannot be invited — note them. If the connector is unavailable, note who needs to be manually invited.
 
 5. Confirm to member:
    > "'{name}' has been updated."
    > {if renamed}: "The project directory is now at `{base}/{new-slug}/`."
    > {if channel created}: "Channel #{channel_name} has been created on {comms_platform}."
-   > {if members invited}: "{N} new members have been invited to #{channel_name}."
+   > {if members invited}: "{N} new members have been invited to #{channel_name}." ({N} counts only members actually invited — on a private project, only satisfied rows.)
+   > {private tier, if access changed}: the procedure's `summary_lines`, then for each satisfied add "{name} can now open and edit the project." and, for an outside-registry address, "{name} is outside your org — they'll find it under 'Shared with me' in their storage app."
+   > {private tier, if any row is pending}: "{name}'s access didn't take effect ({reason}), so they're not on the project yet. Say 'add {name} to {project}' to try again." / "{name} still has access ({removal declined or failed}), so they're still on the roster."
+   > {private tier, if the pointer was created}: "'{name}' is now listed in the org's project index (title and owner only); its contents stay limited to its members."
+
+**Entry from create-project (private tier).** When `create-project` hands off its `pending_members`, start at Step 4.0 with them as *Add member* rows (every one already has a registry `sharing_identity` or an email the owner gave). Do not re-run Steps 2–3 or the "Ready to apply?" diff — the owner confirmed the project in create-project Step 9; the permission table is the confirmation that matters here. Then Step 4.2 (roster entries for satisfied rows only), 4.3 (pointer — created if any row is satisfied), 4.4 (channel invitations for satisfied rows only) and the 4.5 confirmation, including any pending people.
 
 **On any write failure:** Surface the specific file that failed. Do not leave the project in a partially-updated state — if the directory rename succeeded but `project.md` write failed, report both the success and the failure clearly so the member can assess the state.
 
@@ -237,6 +278,8 @@ Prefix registry entries (`/shared/prefix-registry/{PREFIX}.json`) are a **differ
 ### Constraints
 
 Never edit an archived project. The archived check in Step 1 is mandatory.
+
+On a private project, never grant or remove access before the Step 4 diff is confirmed, never call `aifs_share`/`aifs_unshare`/`aifs_transfer_ownership` outside the core permission-changes procedure, and never write a roster entry, pointer scope, channel invitation or "can now access" message for a row that isn't `applied` or `skipped_noop`. Never change the owner of a private project here (Step 3 blocks it).
 
 Never allow `status` to be changed via this task. Status transitions are handled exclusively by `archive-project` and `unarchive-project`.
 

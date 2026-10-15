@@ -1,7 +1,7 @@
 ---
 name: manage-action-items
 type: task
-version: 4.3.0
+version: 4.3.1
 collection: projects
 description: Create, view, assign, complete, reassign, and chain action items. Process the review queue from channel digests.
 stateful: false
@@ -66,7 +66,7 @@ Read `{base}/action-items.json` via `aifs_read`.
 
 **Existing item IDs are never rewritten** — not to add a prefix, not to change one, not ever. A project whose items predate any convention keeps them exactly as they are.
 
-**Org field config (4.2):** read `action-item-fields.json` **once here**, not inside any per-item loop. Three cases, all non-fatal:
+**Org field config (4.2):** read `action-item-fields.json` **once here**, not inside any per-item loop. Read `/shared/projects-config/action-item-fields.json` first (gdrive: `id:{resource_ids.shared_root}/projects-config/action-item-fields.json`, path as the fallback; OneDrive: the path). If it isn't there, fall back to the old org-root path `/action-item-fields.json`: an org whose admin hasn't re-run projects setup since the move still has it there (findings 8, 66). Three cases, all non-fatal:
 
 - **File absent** → no org fields are defined. Skip every field prompt. This is the expected state for an org that has upgraded but not configured anything.
 - **`fields` is an empty array** → identical behaviour to absent. This is the shipped default.

@@ -1,6 +1,6 @@
 # Action-Item Fields — Admin Guide
 
-**Introduced:** projects 4.2.0 · **Audience:** org admins · **Config file:** `action-item-fields.json` (org root, provisioned by setup)
+**Introduced:** projects 4.2.0 · **Audience:** org admins · **Config file:** `/shared/projects-config/action-item-fields.json` (provisioned by setup)
 
 Action items ship with a fixed core — title, owner, status, due date, dependencies. Beyond that, what an org needs to record varies: one org wants to separate bugs from regular work, another wants effort estimates, another wants a compliance flag. Rather than guess, 4.2 lets you define those fields yourself, and change them whenever your needs change.
 
@@ -8,7 +8,7 @@ Action items ship with a fixed core — title, owner, status, due date, dependen
 
 ## Where this lives
 
-`action-item-fields.json`, provisioned at the org root. Readable by every member, writable by admins. Its shipped state:
+`/shared/projects-config/action-item-fields.json`, provisioned by setup. Readable by every member, writable by admins. (Through 4.4.1 it lived at the org root, `/action-item-fields.json`, where members couldn't reliably read it. Re-running projects setup — `@ai:install-collection projects` → Reconfigure — copies it to the new place; readers still fall back to the root file until then.) Its shipped state:
 
 ```json
 { "schema_version": 1, "fields": [] }

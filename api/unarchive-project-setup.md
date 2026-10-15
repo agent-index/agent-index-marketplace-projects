@@ -36,7 +36,7 @@ This setup takes about one minute. It connects your unarchive-project task to yo
 ## Setup Completion
 
 1. Write all collected parameter values to `setup-responses.md`
-2. Write the installed instance to `/members/{member-id}/tasks/unarchive-project/`
+2. Write the installed instance to `members/{member_hash}/installed/projects/task/unarchive-project/`
 3. Write `manifest.json`
 4. Register entry in `member-index.json` with alias `@ai:unarchive-project`
 5. Confirm to member: "unarchive-project is installed. Say '@ai:unarchive-project' or 'unarchive project {name}' to restore any archived project."

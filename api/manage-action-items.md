@@ -54,7 +54,7 @@ Read `collection-setup-responses.md` via `aifs_read` to get feature flags.
 
 If `action_items_enabled` is `false`: halt with appropriate message.
 
-Read `{base}/action-items.json` via `aifs_read`.
+Read `{base}/action-items.json`: `aifs_stat` it first and keep its `revision`, then `aifs_read` it. Every write back follows "Writing `action-items.json`" below (bug `20260921-8d20ea22-202128-c7e9`).
 
 **Action-item ID prefix (4.3):** resolve the project's effective prefix in this order, and write nothing while resolving:
 
@@ -136,7 +136,7 @@ Ambiguity is **presented, never guessed**: mixed stems within one project, bare-
 
 This mirrors the assignment guard above — an inline check at the moment of action rather than a separate chore.
 
-Write the item to action-items.json. **Assign the ID as `{PREFIX}-{NNN}`**, where `{PREFIX}` is the effective prefix resolved in Step 1 and `{NNN}` is `next_id` zero-padded to three digits, exactly as before. Increment `next_id`. Store org field values nested under a `fields` object and tags under `tags`:
+Write the item to action-items.json (revision-aware — "Writing `action-items.json`" below). **Assign the ID as `{PREFIX}-{NNN}`**, where `{PREFIX}` is the effective prefix resolved in Step 1 and `{NNN}` is `next_id` zero-padded to three digits, exactly as before. Increment `next_id`. Store org field values nested under a `fields` object and tags under `tags`:
 
 ```json
 { "id": "MOB-014", "title": "...", "owner": "...", "status": "open",
@@ -212,6 +212,17 @@ The action items list should be a trustworthy record of what needs to happen. Ev
 When showing items, prioritize what's actionable: blocked items with recently resolved blockers, items approaching deadlines, items owned by the current member. Don't just dump a flat list.
 
 For the review queue: present candidates one at a time, not as a batch. Let the member focus on each one. If the queue is long (10+), offer: "There are {N} candidates to review. Want to go through them all now, or just the most recent ones?"
+
+### Writing `action-items.json` (revision-aware — bug `20260921-8d20ea22-202128-c7e9`)
+
+`action-items.json` has several writers (this task, `update-project`, `project-decide`, `manage-ideas`, `share-idea`, `transition-project`) and every write replaces the whole file, so an unguarded read-modify-write silently drops whatever another member wrote in between. Every write of an existing `action-items.json`, in any projects task, follows this rule:
+
+1. `aifs_stat` the file and keep its `revision`, then `aifs_read` it (stat first: if the file changes between the two, the guarded write below conflicts instead of overwriting).
+2. Apply the change to that copy and write it with `"if_revision": "{revision}"`. Write the payload with `content_file` (a local temp file), not inline `content` — the file can be well over the ~128 KiB inline limit.
+3. On `REVISION_CONFLICT`: stat + re-read the fresh file, re-apply the same change to the fresh copy once (re-resolve anything derived from the old copy — e.g. a new item's ID comes from the fresh `next_id`), and write again with the new `revision`.
+4. A second `REVISION_CONFLICT` → stop. Write nothing more and tell the member: "Someone else is updating this project's action items right now, so I didn't save your change ({summary}). Try again in a moment." Never fall back to an unguarded write.
+
+Creating the file for the first time (it doesn't exist yet) is a plain write; every later write is guarded.
 
 ### Constraints
 

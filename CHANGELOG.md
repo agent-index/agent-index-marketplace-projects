@@ -6,7 +6,7 @@ Format: [MAJOR.MINOR.PATCH] — YYYY-MM-DD
 
 ---
 
-## [4.4.3] — <RELEASE_DATE> — standards.md citations re-pointed
+## [4.4.3] — 2026-10-17 — standards.md citations re-pointed
 
 Pairs with core 4.1.0 (CI-013, projects#1 by Kallista Salak): create-idea 4.2.1, create-project 4.4.3 and edit-project 4.4.3 cite core `runtime-reference.md` instead of the retired `standards.md`. No behaviour change.
 

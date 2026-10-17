@@ -1,7 +1,7 @@
 ---
 name: create-project
 type: task
-version: 4.4.2
+version: 4.4.3
 collection: projects
 description: Creates a new project — org-public by default (the org commons; every member can see and contribute) or private (the member's own My Drive, invisible until shared) — including ownership, brief, milestones, team members, roles, optional comms channel, and project tracking directories. Org-public projects get a discovery pointer; private ones don't until shared.
 stateful: false

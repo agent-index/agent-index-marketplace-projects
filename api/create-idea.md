@@ -1,7 +1,7 @@
 ---
 name: create-idea
 type: task
-version: 4.2.0
+version: 4.2.1
 collection: projects
 description: Creates a new idea for a project — private by default and INVISIBLE (stored in the member's own My Drive; no org-visible record exists until shared or promoted via share-idea). The creation prompt also offers project-resident creation (the idea lives in the project and adopts its tier). Artifacts attached at creation inherit the idea's access structurally.
 stateful: false

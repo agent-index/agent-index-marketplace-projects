@@ -1,7 +1,7 @@
 ---
 name: update-project
 type: task
-version: 4.1.0
+version: 4.1.1
 collection: projects
 description: The primary input mechanism for project updates — share progress, report blockers, update action items, and log what's happening. Lightweight and conversational.
 stateful: false
@@ -51,7 +51,7 @@ If the member named a project: resolve as above. If not: ask "Which project are 
 
 Read the project's `current-state.md` via `aifs_read` to understand the current context.
 
-If `action_items_enabled`: read `action-items.json` via `aifs_read` and identify items assigned to the current member.
+If `action_items_enabled`: read `action-items.json` (`aifs_stat` for its `revision`, then `aifs_read`) and identify items assigned to the current member.
 
 **Channel source check:** If the member's request indicates the update source is a communications channel (e.g., "read the Slack channel and update the project," "check the channel for updates," "sync from Slack"), do not read the channel directly. Instead, hand off to `channel-digest`. That task manages the channel cursor, extracts candidates properly, and writes to the review queue. After channel-digest completes, return here to apply any confirmed updates to the project files. Never read a project's comms channel outside of the channel-digest workflow — even for ad-hoc requests.
 
@@ -122,7 +122,7 @@ On confirmation:
    }
    ```
 
-2. If `action_items_enabled` and the member confirmed action item changes:
+2. If `action_items_enabled` and the member confirmed action item changes, apply them in one write of `action-items.json` (revision-aware: `manage-action-items` § "Writing `action-items.json`", bug `20260921-8d20ea22-202128-c7e9`):
    - Mark completed items as `completed` with `completed_date: {today}` and append an update entry
    - Mark blocked items as `blocked` with a note about the blocker
    - Create new action items with owners, descriptions, and source referencing this update

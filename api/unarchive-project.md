@@ -1,7 +1,7 @@
 ---
 name: unarchive-project
 type: task
-version: 4.0.0
+version: 4.0.1
 collection: projects
 description: Restores an archived project to active status, making it editable again and returning it to active project views. Optionally restores the project's comms channel.
 stateful: false

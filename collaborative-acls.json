@@ -1,29 +1,30 @@
 {
   "version": "1.0",
   "collection": "projects",
-  "description": "Declarative folder ACLs provisioned at install/upgrade via install-collection Step 5.5 (permission-change-helper, admin Accepts). The /shared/projects/ commons grant is what the 3.x audit found missing (members were reader-only on /shared, breaking every project write for non-admins). UPGRADE ORDERING (4.0): the commons grant must not be applied to an org upgrading from 3.x until the admin completes the gated-idea review in upgrade/3-to-4.md.",
-  "grants": [
+  "requires_upgrade_review": ["3-to-4"],
+  "description": "Declarative folder ACLs provisioned at install/upgrade via install-collection Step 5.5 (core permission-changes procedure; the admin confirms the exact changes). The /shared/projects/ commons grant is what the 3.x audit found missing (members were reader-only on /shared, breaking every project write for non-admins). UPGRADE ORDERING (4.0): the commons grant must not be applied to an org upgrading from 3.x until the admin completes the gated-idea review in upgrade/3-to-4.md. requires_upgrade_review names that review: install-collection (2.4.0+) asks the admin whether the 3-to-4 admin-half gated-idea review is done before applying these grants on an existing install.",
+  "acls": [
     {
       "path": "/shared/projects/",
       "recipient": "{all_members_group}",
       "role": "writer",
       "inherit": true,
-      "purpose": "Org-public project commons: uniform member write on projects, action items, decisions, artifacts, activity logs — with task-level changelog attribution."
+      "rationale": "Org-public project commons: uniform member write on projects, action items, decisions, artifacts, activity logs — with task-level changelog attribution."
     },
     {
       "path": "/shared/projects-index/",
       "recipient": "{all_members_group}",
       "role": "writer",
       "inherit": true,
-      "purpose": "Discovery index: members write pointer records for org-public projects and for private items they share."
+      "rationale": "Discovery index: members write pointer records for org-public projects and for private items they share."
     },
     {
       "path": "/shared/prefix-registry/",
       "recipient": "{all_members_group}",
       "role": "writer",
       "inherit": true,
-      "purpose": "Action-item ID prefix reservations (4.2): members claim a prefix when creating a project, so every member needs write. One small file per prefix — never a single shared registry file, which would be a read-modify-write race across concurrent project creations."
+      "rationale": "Action-item ID prefix reservations (4.2): members claim a prefix when creating a project, so every member needs write. One small file per prefix — never a single shared registry file, which would be a read-modify-write race across concurrent project creations."
     }
   ],
-  "notes": "Private projects and ideas live in members' own My Drives and are never provisioned here — owners grant per-person via permission-change-helper. NOTE for admins: /shared/projects/ also hosts org record spaces (e.g. core-improvements) — the all@ writer grant covers them too, which matches their open-commons usage; the pointer index is what distinguishes actual projects. 4.2: /shared/prefix-registry/ holds one file per claimed action-item prefix. Entries are never deleted on archive or transition — a released prefix would free IDs that are already referenced outside agent-index."
+  "notes": "Private projects and ideas live in members' own My Drives and are never provisioned here — owners grant per-person through the core permission-changes procedure (owner confirms). NOTE for admins: /shared/projects/ also hosts org record spaces (e.g. core-improvements) — the all@ writer grant covers them too, which matches their open-commons usage; the pointer index is what distinguishes actual projects. 4.2: /shared/prefix-registry/ holds one file per claimed action-item prefix. Entries are never deleted on archive or transition — a released prefix would free IDs that are already referenced outside agent-index."
 }

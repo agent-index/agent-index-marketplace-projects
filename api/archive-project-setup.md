@@ -36,7 +36,7 @@ This setup takes about one minute. It connects your archive-project task to your
 ## Setup Completion
 
 1. Write all collected parameter values to `setup-responses.md`
-2. Write the installed instance to `/members/{member-id}/tasks/archive-project/`
+2. Write the installed instance to `members/{member_hash}/installed/projects/task/archive-project/`
 3. Write `manifest.json`
 4. Register entry in `member-index.json` with alias `@ai:archive-project`
 5. Confirm to member: "archive-project is installed. Say '@ai:archive-project' or 'archive project {name}' to archive any active project."

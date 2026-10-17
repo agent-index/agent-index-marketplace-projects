@@ -1,7 +1,7 @@
 ---
 name: create-project
 type: task
-version: 4.3.0
+version: 4.4.2
 collection: projects
 description: Creates a new project — org-public by default (the org commons; every member can see and contribute) or private (the member's own My Drive, invisible until shared) — including ownership, brief, milestones, team members, roles, optional comms channel, and project tracking directories. Org-public projects get a discovery pointer; private ones don't until shared.
 stateful: false
@@ -147,7 +147,7 @@ Then ask: "Who is the project manager? This can be the same person as the owner,
 
 For each person named (owner, PM), resolve their identity against the members registry:
 
-1. Read `/members-registry.json` from the remote filesystem via `aifs_read`
+1. Read the members registry by id anchor — org-config `resource_ids.members_registry` → `aifs_read("id:{members_registry_id}")` (org-config is read by `id:{org_config_id}` from local `agent-index.json`). OneDrive (local `agent-index.json` `remote_filesystem.backend`): read `/org-config.json` and `/members-registry.json` by path instead — a bare `id:` resolves against your own drive there (core `runtime-reference.md` § "Addressing: Owned Content and Sharing", finding 63). On gdrive, don't read `/members-registry.json` by path: a member who isn't a Drive member of the org root gets `FILE_NOT_FOUND` there.
 2. Search for a match by `display_name` (case-insensitive partial match is acceptable — e.g., "Bill" matches "Bill Smith")
 3. If exactly one match is found: confirm with the member — "That's {display_name} ({email}), correct?" If confirmed, record the person as a **registered member** with their `member_hash`, `display_name`, and `email`.
 4. If multiple matches are found: present all matches and ask the member to clarify which person they mean.
@@ -246,7 +246,7 @@ If the member wants to add members now:
 - Ask for a name and role assignment, one at a time
 - Role must be selected from the confirmed roles list from Step 6
 - For each person named, resolve their identity against the members registry using the same process as Step 3:
-  1. Search `/members-registry.json` on the remote filesystem via `aifs_read` by `display_name` (case-insensitive partial match)
+  1. Search the members registry (read by id anchor, as in Step 3) by `display_name` (case-insensitive partial match)
   2. If exactly one match: confirm — "That's {display_name} ({email}), correct?" If confirmed, record as a registered member with `member_hash`, `display_name`, and `email`.
   3. If multiple matches: present all and ask for clarification.
   4. If no match: record as unregistered with the provided name. Note: "{name} isn't in the org's member registry yet. I'll add them by name for now — once they're set up in agent-index, you can link their full identity via '@ai:edit-project'."
@@ -254,6 +254,12 @@ If the member wants to add members now:
 - Minimum: zero members — this step is optional
 
 If the member wants to skip: record an empty members list and proceed.
+
+**Private tier (4.4.0):** on a private project the roster IS the grant list (decision 5), so people named here are **not** written to the roster at creation. Hold them as `pending_members`, each with a recipient address:
+- A registry match → their `sharing_identity`.
+- No registry match (item 4 above does not apply on this tier) → **ask now for their email address. Never guess.** An address the member gives is allowed even outside the registry; the permission table will flag it **outside your org**, and they'll open the project from "Shared with me". If the member has no address, leave the person out: *"I'll leave {name} off for now — add them with '@ai:edit-project' once you have their email."*
+
+After the project is created (Step 9), hand off to `edit-project` **at its Step 4.0** ("Entry from create-project"): run the core permission-changes procedure with one `share` per pending member, exactly as edit-project's *Add member* does; then write roster entries and the pointer for satisfied rows only (edit-project Steps 4.2–4.3), then confirm (4.5). Do not re-run edit-project's own "Ready to apply?" diff — the permission table is the confirmation.
 
 **On success:** Proceed to Step 8.
 
@@ -365,7 +371,7 @@ On confirmation:
    roles:
    {roles as YAML list}
    members:
-   {each member as a YAML object with display_name, member_hash (or null), email (or null), and role — empty array if none}
+   {each member as a YAML object with display_name, member_hash (or null), email (or null), and role — empty array if none. PRIVATE tier: always an empty array here; members join via the Step 7 hand-off, only once their grant is verified}
    milestones:
    {each milestone as a YAML object with name, target_date, status — empty array if milestones_enabled is false or none defined}
    comms_channel:
@@ -426,7 +432,7 @@ On confirmation:
        "owner": "{owner display_name}", "owner_hash": "{member_hash}",
        "status": "active", "scope": "org_public",
        "action_item_prefix": "{PREFIX, or null if none set}",
-       "location": {"path": "/shared/projects/{slug}/"},
+       "location": {"path": "/shared/projects/{slug}/", "folder_id": "{the commons project folder's Drive id — aifs_stat after creating it; members on Google Drive open org-public projects by id (publicptrid, finding 49)}"},
        "created": "{today}", "last_updated": "{ISO}", "owner_departed": false
      }
      ```
@@ -436,7 +442,7 @@ On confirmation:
 
    **Private-tier extra:** `aifs_stat("id:{member_folder_id}/projects/{slug}")` → record the
    resolved `project_folder_id` in the project.md frontmatter (`folder_id: {id}`) **and the returned
-   `drive_id` as `item_drive_id` (adapter 2.3.0+)** — edit-project's grant specs need the bare ID, and
+   `drive_id` as `item_drive_id` (adapter 2.3.0+)** — the permission-changes procedure needs the bare ID as its `resource`, and
    the pointer it later writes carries `item_drive_id` so a grantee can open the private project
    cross-drive (C.1.3 `crossdriveread`). Capturing it now avoids a re-stat at first-share time.
 
@@ -482,6 +488,8 @@ On confirmation:
 7. Confirm to member:
    > org-public: "Project '{name}' has been created in the org commons — every member can see and contribute to it. Edit it anytime with '@ai:edit-project'."
    > private: "Project '{name}' has been created in your own space — invisible to everyone else. Add members with '@ai:edit-project' (each becomes a collaborator you approve), or make it org-public later with '@ai:transition-project'."
+   >
+   > If `pending_members` is non-empty (private tier): continue straight into `edit-project` Step 4.0 (entry from create-project) for them. "Now let's give {names} access — I'll show you exactly what will change."
 
 **On any write failure:** Check `aifs_auth_status()`. If `authenticated: false`, attempt automatic re-authentication via `aifs_authenticate` and retry the failed write. If re-auth fails or the write still fails: surface the specific file that failed, leave any successfully written files in place, and advise the member to retry or say '@ai:member-bootstrap' to troubleshoot their remote filesystem connection.
 

@@ -6,7 +6,7 @@ Format: [MAJOR.MINOR.PATCH] — YYYY-MM-DD
 
 ---
 
-## [4.4.2] — <RELEASE_DATE> — field config readable by members
+## [4.4.2] — 2026-10-17 — field config readable by members
 
 ### Fixed (4.0.1 pass — OneDrive and Google Drive live tests)
 - **`action-item-fields.json` moves from the org root to `/shared/projects-config/` (findings 8, 66).** Members can't read root-level files. Setup Completion writes the new location, copies an existing root file there (read back to check) and offers to delete the old one on an explicit yes; manage-action-items 4.3.1 and project-pulse 4.2.1 read the new location first and fall back to the root. Runs through install-collection → Reconfigure, which upgrade-collection already prompts for.

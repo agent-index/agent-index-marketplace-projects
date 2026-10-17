@@ -46,7 +46,7 @@ This setup takes about one minute. It connects your edit-project task to your or
 ## Setup Completion
 
 1. Write all collected parameter values to `setup-responses.md`
-2. Write the installed instance to `/members/{member-id}/tasks/edit-project/`
+2. Write the installed instance to `members/{member_hash}/installed/projects/task/edit-project/`
 3. Write `manifest.json`
 4. Register entry in `member-index.json` with alias `@ai:edit-project`
 5. Confirm to member: "edit-project is installed. Say '@ai:edit-project' or 'edit project {name}' to update any project."

@@ -1,7 +1,7 @@
 ---
 name: share-idea
 type: task
-version: 4.2.0
+version: 4.2.1
 collection: projects
 description: Make a private idea visible — three distinct moves. Share with specific people (per-person Drive grants on the idea folder in the owner's My Drive; reader or collaborator); PROMOTE into the parent project (relocates the content and adopts the project's tier — the "ready for the team" move); or unshare (revoke grants, pointer goes revoked). Owner-only; every grant goes through the core permission-changes procedure (owner confirms the exact changes; each is verified). Replaces the 3.x copy-to-shared flow.
 stateful: false
@@ -72,7 +72,7 @@ Review-before-sharing as 3.x: show title/description/artifacts, offer edits to t
 4. Mark the My Drive original `status: "moved-to-project"` (stub; or owner may delete it — their space, offer both).
 5. Pointer: if one exists (idea was people-shared first) → overwrite: `scope` = `"org_public"` (public project) or the project's roster scope (private project), `location` = project path/folder_id. If none existed → write one ONLY when the project is org-public (a promoted idea in a PRIVATE project stays invisible org-wide, like everything else in that project).
 6. Old per-person grants on the My Drive folder become moot (stub) — offer optional revocation (`unshare` changes through the procedure, `source: "current_state"`) or leave harmlessly.
-7. Activity log `idea_promoted` + action items + optional channel notification (3.x mechanics).
+7. Activity log `idea_promoted` + action items (revision-aware: `manage-action-items` § "Writing `action-items.json`", bug `20260921-8d20ea22-202128-c7e9`) + optional channel notification (3.x mechanics).
 8. Confirm.
 
 ### Step 3C: Unshare

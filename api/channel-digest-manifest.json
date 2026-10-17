@@ -3,7 +3,7 @@
   "type": "task",
   "display_name": "Channel Digest",
   "collection": "projects",
-  "collection_version": "4.4.1",
+  "collection_version": "4.4.2",
   "version": "4.0.0",
   "eol_date": null,
   "eol_warning_days": 60,

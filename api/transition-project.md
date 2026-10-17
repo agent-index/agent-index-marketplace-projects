@@ -1,7 +1,7 @@
 ---
 name: transition-project
 type: task
-version: 4.3.1
+version: 4.3.2
 collection: projects
 description: Move a project between visibility tiers. Private → org-public copies the whole project (record, action items, decisions, ideas/, artifacts/, activity) into the org commons — the org gains custody; roster grants become moot. Org-public → private copies it into the owner's My Drive and leaves an archived stub in the commons (members can't delete /shared — and going private does not un-publish what the org already saw). Owner-only; the pointer is overwritten to match.
 stateful: false
@@ -72,7 +72,7 @@ No writes before explicit confirmation.
    Then write the private `project.md` roster: the kept people whose rows were satisfied (with their registry `member_hash`/`email`, or the owner-given email).
 4. **Overwrite the pointer:** `scope` = `{"collaborators": [ … ]}` listing only the satisfied 3B.3 rows, or `"private"` if the owner kept nobody; `location: {"folder_id": …, "item_drive_id": …}` (from the 3B.1 stat). Carry `action_item_prefix` (4.2). Then append the `transitioned_to_private` activity event to the private copy.
 4a. **Prefix registry (4.2):** set `"visibility": "private"` and **remove `project_slug`**. Note the rationale differs from a never-public project: the org has already seen this project and an archived stub remains in the commons, so this is not concealment — it is keeping the registry's disclosure consistent with the project's current tier, so the entry never implies a live commons location that no longer holds data. **The claim is retained** — items already issued under this prefix keep resolving (`action-item-prefix-rules.md` §10).
-5. **Archive the commons original** (cannot delete): overwrite `project.md` with the stub `{"slug","name","status":"archived-moved-private","moved":"{ISO}","see":"projects-index pointer"}`; reduce data files to stubs likewise (action-items.json → `{"moved":true}` etc.) so full data doesn't linger in the commons; append a final activity event. Listing tasks filter the status.
+5. **Archive the commons original** (cannot delete): overwrite `project.md` with the stub `{"slug","name","status":"archived-moved-private","moved":"{ISO}","see":"projects-index pointer"}`; reduce data files to stubs likewise (action-items.json → `{"moved":true}` etc.; stub `action-items.json` with `if_revision` = the commons file's revision from an `aifs_stat` taken just before 3B.1 copied it, so a write that landed after the copy is caught instead of destroyed — on `REVISION_CONFLICT` re-copy that file to the private copy once, then stub with the fresh revision; a second conflict → stop and tell the member — `manage-action-items` § "Writing `action-items.json`", bug `20260921-8d20ea22-202128-c7e9`) so full data doesn't linger in the commons; append a final activity event. Listing tasks filter the status.
 
 ### Step 4: Confirm
 

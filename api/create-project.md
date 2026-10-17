@@ -1,7 +1,7 @@
 ---
 name: create-project
 type: task
-version: 4.4.1
+version: 4.4.2
 collection: projects
 description: Creates a new project — org-public by default (the org commons; every member can see and contribute) or private (the member's own My Drive, invisible until shared) — including ownership, brief, milestones, team members, roles, optional comms channel, and project tracking directories. Org-public projects get a discovery pointer; private ones don't until shared.
 stateful: false
@@ -147,7 +147,7 @@ Then ask: "Who is the project manager? This can be the same person as the owner,
 
 For each person named (owner, PM), resolve their identity against the members registry:
 
-1. Read the members registry by id anchor — org-config `resource_ids.members_registry` → `aifs_read("id:{members_registry_id}")` (org-config is read by `id:{org_config_id}` from local `agent-index.json`). Don't read `/members-registry.json` by path: a member who isn't a Drive member of the org root gets `FILE_NOT_FOUND` there.
+1. Read the members registry by id anchor — org-config `resource_ids.members_registry` → `aifs_read("id:{members_registry_id}")` (org-config is read by `id:{org_config_id}` from local `agent-index.json`). OneDrive (local `agent-index.json` `remote_filesystem.backend`): read `/org-config.json` and `/members-registry.json` by path instead — a bare `id:` resolves against your own drive there (core standards § Addressing, finding 63). On gdrive, don't read `/members-registry.json` by path: a member who isn't a Drive member of the org root gets `FILE_NOT_FOUND` there.
 2. Search for a match by `display_name` (case-insensitive partial match is acceptable — e.g., "Bill" matches "Bill Smith")
 3. If exactly one match is found: confirm with the member — "That's {display_name} ({email}), correct?" If confirmed, record the person as a **registered member** with their `member_hash`, `display_name`, and `email`.
 4. If multiple matches are found: present all matches and ask the member to clarify which person they mean.

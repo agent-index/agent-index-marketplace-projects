@@ -55,7 +55,7 @@ This setup takes about one minute. It connects your create-project task to your 
 ## Setup Completion
 
 1. Write all collected parameter values to `setup-responses.md`
-2. Write the installed instance to `/members/{member-id}/tasks/create-project/`
+2. Write the installed instance to `members/{member_hash}/installed/projects/task/create-project/`
 3. Write `manifest.json`
 4. Register entry in `member-index.json` with alias `@ai:create-project`
 5. Confirm to member: "create-project is installed. Say '@ai:create-project' or 'create project' whenever you're ready to start a new project."

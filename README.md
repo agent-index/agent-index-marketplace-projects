@@ -88,7 +88,7 @@ When enabled during collection setup, project creation can optionally create a d
 
 ## Version
 
-4.4.1
+4.4.2
 
 ## Version History
 

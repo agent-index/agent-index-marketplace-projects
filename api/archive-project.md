@@ -1,7 +1,7 @@
 ---
 name: archive-project
 type: task
-version: 4.0.0
+version: 4.0.1
 collection: projects
 description: Archives an active project, marking it as no longer relevant and making it read-only. Optionally archives the project's comms channel. Archived projects remain in the shared registry but cannot be edited.
 stateful: false

@@ -1,7 +1,7 @@
 ---
 name: project-pulse
 type: task
-version: 4.2.0
+version: 4.2.1
 collection: projects
 description: Status report generation and conversational Q&A about a project. Synthesizes activity logs, action items, decisions, milestones, ideas, and the project brief into coherent views for stakeholders and managers.
 stateful: false
@@ -59,7 +59,7 @@ Identify the project. Read the full project context (via `aifs_read`):
 - `decisions/` — all decision files
 - `ideas/` — all shared ideas with their statuses
 - `state/current-state.md` — latest state summary
-- `action-item-fields.json` (4.2) — the org's action-item field definitions, so field values can be rendered with their labels and units and aggregated meaningfully. Absent, empty, or unparseable → render items exactly as 4.1 did, with no field sections and no warning noise in the report itself. A report is a stakeholder artifact; a config problem belongs in a note to the member, not in the document.
+- `action-item-fields.json` (4.2) — read from `/shared/projects-config/action-item-fields.json` (gdrive: `id:{resource_ids.shared_root}/projects-config/action-item-fields.json`, path as the fallback; OneDrive: the path), falling back to the old org-root `/action-item-fields.json` (findings 8, 66; same lookup as `manage-action-items`) — the org's action-item field definitions, so field values can be rendered with their labels and units and aggregated meaningfully. Absent, empty, or unparseable → render items exactly as 4.1 did, with no field sections and no warning noise in the report itself. A report is a stakeholder artifact; a config problem belongs in a note to the member, not in the document.
 
 This is a heavy read. Load everything needed before interacting with the member.
 

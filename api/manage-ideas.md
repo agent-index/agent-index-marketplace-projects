@@ -1,7 +1,7 @@
 ---
 name: manage-ideas
 type: task
-version: 4.1.0
+version: 4.1.1
 collection: projects
 description: View, edit, and manage ideas — add artifacts, create response ideas, add collaborators, and promote artifacts to the project with actionable assignments.
 stateful: false
@@ -88,7 +88,7 @@ Accept files provided in the session. Copy to the idea's `/artifacts/` directory
 Collect links with labels and optional platform types. Add to the `references` array in idea.md. If shared, log to the activity log.
 
 **Add collaborators (shared ideas only):**
-Resolve each person against the members registry. Collect their assignment. Add to the `collaborators` array. Create an action item for each (if action_items_enabled). Post channel notification (if applicable). Log to activity log.
+Resolve each person against the members registry. Collect their assignment. Add to the `collaborators` array. Create an action item for each (if action_items_enabled; revision-aware: `manage-action-items` § "Writing `action-items.json`", bug `20260921-8d20ea22-202128-c7e9`). Post channel notification (if applicable). Log to activity log.
 
 **Create response idea:**
 A response idea is a new idea that references the current idea as its parent. It follows the same creation flow as create-idea but with `parent_idea` set to the current idea's slug. Response ideas are always created in the shared project space (since they're responding to a shared idea). The parent idea's record is not modified — the relationship is tracked via the child's `parent_idea` field.
@@ -114,7 +114,7 @@ For each artifact being promoted:
        email: "..."
      assignment: "{what they should do}"
    ```
-6. If `action_items_enabled`: create an action item for the assignee with the assignment description, linked to the promoted artifact as its source.
+6. If `action_items_enabled`: create an action item for the assignee with the assignment description, linked to the promoted artifact as its source (revision-aware: `manage-action-items` § "Writing `action-items.json`", bug `20260921-8d20ea22-202128-c7e9`).
 7. Log to the activity log:
    ```json
    {

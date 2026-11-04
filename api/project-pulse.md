@@ -1,7 +1,7 @@
 ---
 name: project-pulse
 type: task
-version: 4.2.1
+version: 4.2.2
 collection: projects
 description: Status report generation and conversational Q&A about a project. Synthesizes activity logs, action items, decisions, milestones, ideas, and the project brief into coherent views for stakeholders and managers.
 stateful: false
@@ -123,7 +123,7 @@ Present the report to the member:
 >
 > Save this report?
 
-If yes: write to `{project}/artifacts/status-reports/{today}-status-report.md`. Log to activity log.
+If yes: write to `{project}/artifacts/status-reports/{today}-status-report.md`. Log to activity log (`internal/activity-log-append.md` § "Appending an entry").
 
 ---
 

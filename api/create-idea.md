@@ -1,7 +1,7 @@
 ---
 name: create-idea
 type: task
-version: 4.2.1
+version: 4.2.2
 collection: projects
 description: Creates a new idea for a project — private by default and INVISIBLE (stored in the member's own My Drive; no org-visible record exists until shared or promoted via share-idea). The creation prompt also offers project-resident creation (the idea lives in the project and adopts its tier). Artifacts attached at creation inherit the idea's access structurally.
 stateful: false
@@ -154,7 +154,7 @@ On confirmation:
 
 3. Copy any provided artifact files to `/artifacts/`.
 
-4. If the idea is project-resident: append an activity log entry to `{project base}/activity/activity-log.jsonl` (attributed):
+4. If the idea is project-resident: append an activity log entry to `{project base}/activity/activity-log.jsonl` (attributed; follow `internal/activity-log-append.md` § "Appending an entry"):
    ```json
    {
      "timestamp": "{ISO 8601}",
@@ -197,6 +197,6 @@ If the member's private ideas directory for this project doesn't exist yet: crea
 
 If the project's shared ideas directory doesn't exist yet: create `{project base}/ideas/` on first use, where `{project base}` is the tier-resolved base from Step 1 (org-public → `/shared/projects/{slug}/`; private → the owner's space). **Do not** build this path from `shared_projects_path` — that setup parameter was removed in 4.0 and substituting it yields a broken path.
 
-If the project's activity log directory doesn't exist yet (e.g., project predates tracking features): create `{project base}/activity/` and initialize an empty `activity-log.jsonl` on first use — same tier-resolved base as above, not `shared_projects_path`.
+If the project's activity log directory doesn't exist yet (e.g., project predates tracking features): create it on first use as `internal/activity-log-append.md` § "Creating the log" describes — same tier-resolved base as above, not `shared_projects_path`.
 
 If the member provides a link but no label: use the URL domain as the label (e.g., "figma.com link").

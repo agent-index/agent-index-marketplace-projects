@@ -1,7 +1,7 @@
 ---
 name: manage-ideas
 type: task
-version: 4.1.1
+version: 4.1.2
 collection: projects
 description: View, edit, and manage ideas — add artifacts, create response ideas, add collaborators, and promote artifacts to the project with actionable assignments.
 stateful: false
@@ -79,21 +79,21 @@ Present a dashboard:
 ### Step 3: Handle Operations
 
 **Edit idea (description, title):**
-Read the current idea.md. Present the content. Accept updates. Write the updated file. If the idea is shared, log to the activity log.
+Read the current idea.md. Present the content. Accept updates. Write the updated file. If the idea is shared, log to the activity log (`internal/activity-log-append.md` § "Appending an entry").
 
 **Add artifacts:**
-Accept files provided in the session. Copy to the idea's `/artifacts/` directory. Update `last_updated` in idea.md. If shared, log to the activity log.
+Accept files provided in the session. Copy to the idea's `/artifacts/` directory. Update `last_updated` in idea.md. If shared, log to the activity log (`internal/activity-log-append.md` § "Appending an entry").
 
 **Add references:**
-Collect links with labels and optional platform types. Add to the `references` array in idea.md. If shared, log to the activity log.
+Collect links with labels and optional platform types. Add to the `references` array in idea.md. If shared, log to the activity log (`internal/activity-log-append.md` § "Appending an entry").
 
 **Add collaborators (shared ideas only):**
-Resolve each person against the members registry. Collect their assignment. Add to the `collaborators` array. Create an action item for each (if action_items_enabled; revision-aware: `manage-action-items` § "Writing `action-items.json`", bug `20260921-8d20ea22-202128-c7e9`). Post channel notification (if applicable). Log to activity log.
+Resolve each person against the members registry. Collect their assignment. Add to the `collaborators` array. Create an action item for each (if action_items_enabled; revision-aware: `manage-action-items` § "Writing `action-items.json`", bug `20260921-8d20ea22-202128-c7e9`). Post channel notification (if applicable). Log to activity log (`internal/activity-log-append.md` § "Appending an entry").
 
 **Create response idea:**
 A response idea is a new idea that references the current idea as its parent. It follows the same creation flow as create-idea but with `parent_idea` set to the current idea's slug. Response ideas are always created in the shared project space (since they're responding to a shared idea). The parent idea's record is not modified — the relationship is tracked via the child's `parent_idea` field.
 
-Ask: "What's the title for your response idea?" Then collect description, artifacts, references as in create-idea. Write to `{project}/ideas/{response-slug}/idea.md` with `parent_idea: {parent-slug}`. Log to activity log.
+Ask: "What's the title for your response idea?" Then collect description, artifacts, references as in create-idea. Write to `{project}/ideas/{response-slug}/idea.md` with `parent_idea: {parent-slug}`. Log to activity log (`internal/activity-log-append.md` § "Appending an entry").
 
 **Promote artifacts:**
 This is the critical operation that moves work from exploration to action. The member selects one or more artifacts from a shared idea and promotes them to the project's official artifact space.
@@ -115,7 +115,7 @@ For each artifact being promoted:
      assignment: "{what they should do}"
    ```
 6. If `action_items_enabled`: create an action item for the assignee with the assignment description, linked to the promoted artifact as its source (revision-aware: `manage-action-items` § "Writing `action-items.json`", bug `20260921-8d20ea22-202128-c7e9`).
-7. Log to the activity log:
+7. Log to the activity log (follow `internal/activity-log-append.md` § "Appending an entry"):
    ```json
    {
      "timestamp": "{ISO 8601}",
@@ -133,10 +133,10 @@ For each artifact being promoted:
 8. Post channel notification (if applicable): "📎 {author} promoted '{artifact name}' from idea '{idea title}' → assigned to {assignee}: '{assignment}'"
 
 **Mark idea as approved:**
-The idea author (or project owner/PM) can mark a shared idea as `approved`. This signals that the concept is accepted — it does not automatically promote any artifacts. Set `status: approved` in idea.md. Log to activity log. This often precedes or accompanies artifact promotion but is a separate act.
+The idea author (or project owner/PM) can mark a shared idea as `approved`. This signals that the concept is accepted — it does not automatically promote any artifacts. Set `status: approved` in idea.md. Log to activity log (`internal/activity-log-append.md` § "Appending an entry"). This often precedes or accompanies artifact promotion but is a separate act.
 
 **Mark idea as superseded:**
-If a newer idea replaces this one, mark it `superseded`. Optionally reference the superseding idea. Set `status: superseded` and `superseded_by: {slug}` in idea.md. Log to activity log.
+If a newer idea replaces this one, mark it `superseded`. Optionally reference the superseding idea. Set `status: superseded` and `superseded_by: {slug}` in idea.md. Log to activity log (`internal/activity-log-append.md` § "Appending an entry").
 
 ---
 

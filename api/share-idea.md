@@ -1,7 +1,7 @@
 ---
 name: share-idea
 type: task
-version: 4.2.1
+version: 4.2.2
 collection: projects
 description: Make a private idea visible — three distinct moves. Share with specific people (per-person Drive grants on the idea folder in the owner's My Drive; reader or collaborator); PROMOTE into the parent project (relocates the content and adopts the project's tier — the "ready for the team" move); or unshare (revoke grants, pointer goes revoked). Owner-only; every grant goes through the core permission-changes procedure (owner confirms the exact changes; each is verified). Replaces the 3.x copy-to-shared flow.
 stateful: false
@@ -61,7 +61,7 @@ Review-before-sharing as 3.x: show title/description/artifacts, offer edits to t
    `{"type":"idea","name":"{title}","slug":"{idea-slug}","parent":"{project-slug}","owner":…,"owner_hash":…,"status":"active","scope":{"readers":[…],"collaborators":[…]},"location":{"folder_id":"{idea_folder_id}","item_drive_id":"{item_drive_id}"},"created":…,"last_updated":…,"owner_departed":false}`
    `item_drive_id` (from the Step 3A.1 stat; C.1.3 `crossdriveread`) is what lets a grantee on OneDrive open the idea where it physically lives on the owner's drive — a bare `id:{idea_folder_id}` resolves against the *recipient's* drive and 404s.
    **`scope`:** on the first share, `scope` lists **only** grantees whose rows are `applied` or `skipped_noop`. On a later share, never rebuild `scope` from this run's rows alone — that would drop earlier grantees who still have access. Build it from a fresh `aifs_get_permissions({path: "id:{idea_folder_id}", include_inherited: true})` read after the procedure returns (readers → `readers`, writers → `collaborators`, excluding the owner); if that read fails, use the existing pointer's `scope` ∪ this run's satisfied rows. NEVER write the pointer before the procedure returns. If no row is satisfied, write nothing; tell the owner what didn't take effect and offer to re-run.
-5. Activity: only if at least one row is satisfied. If the parent project is accessible to the owner and `activity_log_enabled`, append an `idea_shared` event naming **only the satisfied grantees from this run** (org-public project) — for a PRIVATE parent project, the event goes in the project only if the owner owns/can write it. No satisfied row → no event.
+5. Activity: only if at least one row is satisfied. If the parent project is accessible to the owner and `activity_log_enabled`, append an `idea_shared` event (`internal/activity-log-append.md` § "Appending an entry") naming **only the satisfied grantees from this run** (org-public project) — for a PRIVATE parent project, the event goes in the project only if the owner owns/can write it. No satisfied row → no event.
 6. Confirm, naming only satisfied grantees: who can now read, who can now write, that the idea's title is now org-discoverable, and that promotion is the next step when it's team-ready. For an outside-registry grantee, add that they open it from "Shared with me". List any pending rows (declined, failed, not verified) as not in effect, with "run '@ai:share-idea' again to retry". If nothing was satisfied, say only what didn't take effect — don't claim anyone has access.
 
 ### Step 3B: Promote into the project
@@ -72,7 +72,7 @@ Review-before-sharing as 3.x: show title/description/artifacts, offer edits to t
 4. Mark the My Drive original `status: "moved-to-project"` (stub; or owner may delete it — their space, offer both).
 5. Pointer: if one exists (idea was people-shared first) → overwrite: `scope` = `"org_public"` (public project) or the project's roster scope (private project), `location` = project path/folder_id. If none existed → write one ONLY when the project is org-public (a promoted idea in a PRIVATE project stays invisible org-wide, like everything else in that project).
 6. Old per-person grants on the My Drive folder become moot (stub) — offer optional revocation (`unshare` changes through the procedure, `source: "current_state"`) or leave harmlessly.
-7. Activity log `idea_promoted` + action items (revision-aware: `manage-action-items` § "Writing `action-items.json`", bug `20260921-8d20ea22-202128-c7e9`) + optional channel notification (3.x mechanics).
+7. Activity log `idea_promoted` (`internal/activity-log-append.md` § "Appending an entry") + action items (revision-aware: `manage-action-items` § "Writing `action-items.json`", bug `20260921-8d20ea22-202128-c7e9`) + optional channel notification (3.x mechanics).
 8. Confirm.
 
 ### Step 3C: Unshare

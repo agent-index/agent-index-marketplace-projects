@@ -1,7 +1,7 @@
 ---
 name: update-project
 type: task
-version: 4.1.1
+version: 4.1.2
 collection: projects
 description: The primary input mechanism for project updates — share progress, report blockers, update action items, and log what's happening. Lightweight and conversational.
 stateful: false
@@ -105,7 +105,7 @@ Wait for the member to confirm, adjust, or add more.
 
 On confirmation:
 
-1. If `activity_log_enabled`: append to `{project}/activity/activity-log.jsonl`:
+1. If `activity_log_enabled`: append to `{project}/activity/activity-log.jsonl` (follow `internal/activity-log-append.md` § "Appending an entry"):
    ```json
    {
      "timestamp": "{ISO 8601}",
@@ -165,7 +165,7 @@ Never log the full conversational transcript. The activity log captures structur
 
 ### Edge Cases
 
-If the project has no activity log yet (predates tracking features): create `{project}/activity/activity-log.jsonl` on first use.
+If the project has no activity log yet (predates tracking features): create `{project}/activity/activity-log.jsonl` on first use, as `internal/activity-log-append.md` § "Creating the log" describes.
 
 If the project has no action-items.json yet: initialize it on first use.
 

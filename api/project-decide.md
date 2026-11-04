@@ -1,7 +1,7 @@
 ---
 name: project-decide
 type: task
-version: 4.0.1
+version: 4.0.2
 collection: projects
 description: Records an official project decision with rationale, source ideas, and spawned action items. Decisions are the authoritative record of why the team is doing something.
 stateful: false
@@ -137,7 +137,7 @@ On confirmation:
 
 2. If action items were collected: create each in `{project}/action-items.json` with `source: { "type": "decision", "decision": "{slug}" }` — one write for all of them (revision-aware: `manage-action-items` § "Writing `action-items.json`", bug `20260921-8d20ea22-202128-c7e9`).
 
-3. Append to `{project}/activity/activity-log.jsonl`:
+3. Append to `{project}/activity/activity-log.jsonl` (follow `internal/activity-log-append.md` § "Appending an entry"):
    ```json
    {
      "timestamp": "{ISO 8601}",

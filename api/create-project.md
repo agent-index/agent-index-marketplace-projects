@@ -1,7 +1,7 @@
 ---
 name: create-project
 type: task
-version: 4.4.3
+version: 4.4.4
 collection: projects
 description: Creates a new project — org-public by default (the org commons; every member can see and contribute) or private (the member's own My Drive, invisible until shared) — including ownership, brief, milestones, team members, roles, optional comms channel, and project tracking directories. Org-public projects get a discovery pointer; private ones don't until shared.
 stateful: false
@@ -474,7 +474,7 @@ On confirmation:
    - **If the connector is not available:** do not fail. Record the channel as pending: "Channel creation is enabled but I can't reach {comms_platform} right now. The channel `#{channel_name}` is noted as pending — you can create it later via '@ai:edit-project'." Set `comms_channel.status: pending` in the project record.
    - **If channel creation succeeds:** set `comms_channel.status: active` in the project record. Confirm: "Channel `#{channel_name}` has been created on {comms_platform} and {N} members have been invited."
 
-6. If `activity_log_enabled`: append the first activity log entry to `{project}/activity/activity-log.jsonl`:
+6. If `activity_log_enabled`: append the first activity log entry to `{project}/activity/activity-log.jsonl` (follow `internal/activity-log-append.md` § "Appending an entry"):
    ```json
    {
      "timestamp": "{ISO 8601}",

@@ -1,7 +1,7 @@
 ---
 name: channel-digest
 type: task
-version: 4.0.0
+version: 4.0.1
 collection: projects
 description: Checks a project's communications channel for new messages, produces a digest summary, and extracts candidate action items and updates for human review.
 stateful: true
@@ -123,7 +123,7 @@ Wait for confirmation.
 
 On confirmation:
 
-1. Append to `{project}/activity/activity-log.jsonl`:
+1. Append to `{project}/activity/activity-log.jsonl` (follow `internal/activity-log-append.md` § "Appending an entry"):
    ```json
    {
      "timestamp": "{ISO 8601}",

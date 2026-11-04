@@ -1,7 +1,7 @@
 ---
 name: manage-action-items
 type: task
-version: 4.3.1
+version: 4.3.2
 collection: projects
 description: Create, view, assign, complete, reassign, and chain action items. Process the review queue from channel digests.
 stateful: false
@@ -146,7 +146,7 @@ Write the item to action-items.json (revision-aware — "Writing `action-items.j
 
 A field whose `default` is `null` and which the member skipped is simply **unset**: display it as blank or omit it, never as the literal string "null". "Unset" and "set to nothing" are the same state here, and neither is a value.
 
-Field values are nested rather than flattened onto the item so that an admin-defined key can never collide with a built-in one (`id`, `status`, `owner`, `priority`, `blocked_by`) — a collision there would be silent and unrecoverable. Omit `fields` entirely when nothing was set; omit `tags` when there are none. Log to activity log. Notify via channel if applicable.
+Field values are nested rather than flattened onto the item so that an admin-defined key can never collide with a built-in one (`id`, `status`, `owner`, `priority`, `blocked_by`) — a collision there would be silent and unrecoverable. Omit `fields` entirely when nothing was set; omit `tags` when there are none. Log to activity log (`internal/activity-log-append.md` § "Appending an entry"). Notify via channel if applicable.
 
 **View items:**
 Support multiple views:
@@ -160,7 +160,7 @@ Support multiple views:
 **Update status:**
 Accept: `open` → `in_progress`, `in_progress` → `completed`, any → `blocked`, `blocked` → `in_progress`, any → `deferred`.
 
-When marking `completed`: set `completed_date: {today}`. Append an update entry. Log to activity log.
+When marking `completed`: set `completed_date: {today}`. Append an update entry. Log to activity log (`internal/activity-log-append.md` § "Appending an entry").
 
 After completing an item: check `feeds_into` for downstream items. For each downstream item that lists this item in its `blocked_by`: check if all blockers are now resolved. If so, update the downstream item's status to `open` (from `blocked`) and notify the owner: "{downstream title} is now unblocked — {owner name} can proceed."
 
@@ -174,7 +174,7 @@ Change an org field value or add/remove tags on an existing item. Validate exact
 - A field deprecated after this item was created still shows its stored value and may be **cleared**, but is not offered as something to set.
 
 **Reassign:**
-Ask for the new owner. Resolve against members registry. Update the item. Add an update entry noting the reassignment. Log to activity log. Notify the new owner via channel if applicable.
+Ask for the new owner. Resolve against members registry. Update the item. Add an update entry noting the reassignment. Log to activity log (`internal/activity-log-append.md` § "Appending an entry"). Notify the new owner via channel if applicable.
 
 **Add dependency chain:**
 For an existing item, set `blocked_by` (upstream dependencies) and/or `feeds_into` (downstream items). This establishes the production chain so that completing one item surfaces the next.
@@ -217,10 +217,10 @@ For the review queue: present candidates one at a time, not as a batch. Let the 
 
 `action-items.json` has several writers (this task, `update-project`, `project-decide`, `manage-ideas`, `share-idea`, `transition-project`) and every write replaces the whole file, so an unguarded read-modify-write silently drops whatever another member wrote in between. Every write of an existing `action-items.json`, in any projects task, follows this rule:
 
-1. `aifs_stat` the file and keep its `revision`, then `aifs_read` it (stat first: if the file changes between the two, the guarded write below conflicts instead of overwriting).
+1. `aifs_stat` the file and keep its `revision`, then `aifs_read` it. Stat comes first on purpose: if the file changes between the two calls, the guarded write below conflicts instead of overwriting. This differs in order only from core `collection-authoring-guide.md` § "The `if_revision` pattern for shared state files", which reads first; read-first can pair the newer revision with the older content.
 2. Apply the change to that copy and write it with `"if_revision": "{revision}"`. Write the payload with `content_file` (a local temp file), not inline `content` — the file can be well over the ~128 KiB inline limit.
-3. On `REVISION_CONFLICT`: stat + re-read the fresh file, re-apply the same change to the fresh copy once (re-resolve anything derived from the old copy — e.g. a new item's ID comes from the fresh `next_id`), and write again with the new `revision`.
-4. A second `REVISION_CONFLICT` → stop. Write nothing more and tell the member: "Someone else is updating this project's action items right now, so I didn't save your change ({summary}). Try again in a moment." Never fall back to an unguarded write.
+3. On `REVISION_CONFLICT`: stat + re-read the fresh file, re-apply the same change to the fresh copy (re-resolve anything derived from the old copy — e.g. a new item's ID comes from the fresh `next_id`), and write again with the new `revision`. Retry up to 5 times, as core `collection-authoring-guide.md` § "The `if_revision` pattern for shared state files" sets.
+4. Still conflicting after 5 retries → stop. Write nothing more and tell the member: "Someone else is updating this project's action items right now, so I didn't save your change ({summary}). Try again in a moment." Never fall back to an unguarded write.
 
 Creating the file for the first time (it doesn't exist yet) is a plain write; every later write is guarded.
 
